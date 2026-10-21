@@ -1,0 +1,3555 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Data Structures & Memory Explorer</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            carbon: {
+              950: '#09090b',
+              900: '#121215',
+              850: '#16161a',
+              800: '#18181b',
+              750: '#202024',
+              700: '#27272a',
+              600: '#3f3f46',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { box-sizing: border-box; }
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: #09090b; }
+    ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 2px; }
+    ::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
+
+    /* Technical Dot Matrix Canvas Background */
+    .bg-dot-matrix {
+      background-color: #09090b;
+      background-image: radial-gradient(#27272a 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+
+    /* Crisp Hardware & Node Animations */
+    @keyframes popIn {
+      0% { transform: scale(0.82); opacity: 0; }
+      75% { transform: scale(1.03); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    @keyframes dropStack {
+      0% { transform: translateY(-48px); opacity: 0; }
+      100% { transform: translateY(0); opacity: 1; }
+    }
+    @keyframes shiftRight {
+      0% { transform: translateX(-34px); }
+      100% { transform: translateX(0); }
+    }
+    @keyframes shiftLeft {
+      0% { transform: translateX(34px); }
+      100% { transform: translateX(0); }
+    }
+    @keyframes strobeHit {
+      0% { background-color: rgba(16, 185, 129, 0.35); border-color: #10b981; }
+      100% { background-color: rgba(16, 185, 129, 0.12); border-color: rgba(16, 185, 129, 0.4); }
+    }
+    @keyframes strobeMiss {
+      0% { background-color: rgba(245, 158, 11, 0.35); border-color: #f59e0b; }
+      100% { background-color: rgba(245, 158, 11, 0.12); border-color: rgba(245, 158, 11, 0.4); }
+    }
+    @keyframes errorShake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-8px); }
+      40% { transform: translateX(8px); }
+      60% { transform: translateX(-6px); }
+      80% { transform: translateX(6px); }
+    }
+    @keyframes errorFlash {
+      0% { border-color: #ef4444; box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.45), inset 0 0 20px rgba(239, 68, 68, 0.2); }
+      100% { border-color: #27272a; box-shadow: none; }
+    }
+
+    .anim-pop { animation: popIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    .anim-drop { animation: dropStack 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    .anim-shift-r { animation: shiftRight 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    .anim-shift-l { animation: shiftLeft 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    .flash-hit { animation: strobeHit 0.45s ease-out forwards; }
+    .flash-miss { animation: strobeMiss 0.45s ease-out forwards; }
+    .anim-error-shake { animation: errorShake 0.42s cubic-bezier(0.36, 0.07, 0.19, 0.97) forwards; }
+    .anim-error-border { animation: errorFlash 1.2s ease-out forwards; }
+
+    /* Smooth SVG Tree Node & Edge Transitions for AVL Rotations */
+    .svg-tree-node {
+      transition: transform 0.52s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .svg-tree-edge {
+      transition: all 0.52s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    /* Custom Range Slider */
+    input[type=range] {
+      -webkit-appearance: none;
+      background: #27272a;
+      height: 4px;
+      border-radius: 2px;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 12px;
+      height: 12px;
+      border-radius: 2px;
+      background: #fafafa;
+      border: 1px solid #09090b;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body class="bg-carbon-950 text-zinc-100 font-sans min-h-screen flex flex-col antialiased selection:bg-sky-500 selection:text-zinc-950">
+
+  <!-- TOP COMMAND HEADER -->
+  <header class="h-12 border-b border-carbon-700 bg-carbon-900 px-4 flex items-center justify-between gap-4 sticky top-0 z-40">
+    <!-- Left: Clean Minimal Title -->
+    <div class="flex items-center space-x-2.5 shrink-0">
+      <span class="w-2 h-2 rounded-xs bg-sky-400 inline-block"></span>
+      <span class="font-sans text-xs sm:text-sm font-semibold tracking-tight text-zinc-100">Data Structures &amp; Memory Explorer</span>
+    </div>
+
+    <!-- Center: Segmented Module Switcher -->
+    <nav class="flex items-center bg-carbon-950 p-0.5 rounded-sm border border-carbon-700 overflow-x-auto max-w-full">
+      <button onclick="switchDS('array')" id="ds-tab-array" class="ds-tab px-2.5 py-1 rounded-xs font-mono text-[11px] font-medium transition whitespace-nowrap">
+        Array
+      </button>
+      <button onclick="switchDS('stack')" id="ds-tab-stack" class="ds-tab px-2.5 py-1 rounded-xs font-mono text-[11px] font-medium transition whitespace-nowrap">
+        Stack
+      </button>
+      <button onclick="switchDS('queue')" id="ds-tab-queue" class="ds-tab px-2.5 py-1 rounded-xs font-mono text-[11px] font-medium transition whitespace-nowrap">
+        Queue
+      </button>
+      <button onclick="switchDS('linked')" id="ds-tab-linked" class="ds-tab px-2.5 py-1 rounded-xs font-mono text-[11px] font-medium transition whitespace-nowrap">
+        Linked List
+      </button>
+      <button onclick="switchDS('tree')" id="ds-tab-tree" class="ds-tab px-2.5 py-1 rounded-xs font-mono text-[11px] font-medium transition whitespace-nowrap">
+        Tree
+      </button>
+      <button onclick="switchDS('graph')" id="ds-tab-graph" class="ds-tab px-2.5 py-1 rounded-xs font-mono text-[11px] font-medium transition whitespace-nowrap">
+        Graph
+      </button>
+    </nav>
+
+    <!-- Right: Compact Tabular Hardware Stats -->
+    <div class="hidden xl:flex items-center divide-x divide-carbon-700 border border-carbon-700 bg-carbon-950 rounded-sm font-mono text-[11px] shrink-0">
+      <div class="px-2.5 py-1 flex items-center gap-2">
+        <span class="text-[10px] text-zinc-500 uppercase tracking-wider">Cache Hits</span>
+        <span id="score-hits" class="font-semibold text-emerald-400 tabular-nums">0</span>
+      </div>
+      <div class="px-2.5 py-1 flex items-center gap-2">
+        <span class="text-[10px] text-zinc-500 uppercase tracking-wider">Cache Misses</span>
+        <span id="score-misses" class="font-semibold text-amber-400 tabular-nums">0</span>
+      </div>
+      <div class="px-2.5 py-1 flex items-center gap-2">
+        <span class="text-[10px] text-zinc-500 uppercase tracking-wider">Hit Ratio</span>
+        <span id="score-rate" class="font-semibold text-sky-400 tabular-nums">100%</span>
+      </div>
+      <div class="px-2.5 py-1 flex items-center gap-2">
+        <span class="text-[10px] text-zinc-500 uppercase tracking-wider">Cycles</span>
+        <span id="score-cycles" class="font-semibold text-zinc-200 tabular-nums">0</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN SPLIT WORKSPACE (65% Left Conceptual Viewport | 35% Right Memory Inspector) -->
+  <main class="flex-1 w-full max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-carbon-700 border-b border-carbon-700">
+
+    <!-- LEFT/CENTER PRIMARY VIEWPORT (8 Cols) -->
+    <section id="primary-viewport" class="lg:col-span-8 flex flex-col bg-carbon-950 min-h-[640px] transition-colors">
+
+      <!-- Structured Parameter & Method Toolbar -->
+      <div class="bg-carbon-900 border-b border-carbon-700 divide-y divide-carbon-700">
+        <!-- Sub-Architecture Mode Bar -->
+        <div id="submode-bar" class="hidden px-4 py-2 flex flex-wrap items-center justify-between gap-2 bg-carbon-950/50">
+          <!-- Populated dynamically -->
+        </div>
+
+        <!-- Parameter Selector Strip -->
+        <div id="input-deck" class="px-4 py-2.5 flex flex-wrap items-center gap-4 text-xs">
+          <!-- Populated dynamically -->
+        </div>
+
+        <!-- Method Execution Triggers -->
+        <div id="action-deck" class="px-4 py-2.5 flex flex-wrap items-center gap-1.5 bg-carbon-900">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+
+      <!-- Canvas Viewport Header -->
+      <div class="h-9 px-4 bg-carbon-900/60 border-b border-carbon-700 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="text-[11px] font-mono font-medium text-zinc-300" id="canvas-title">
+            Array (Capacity: 8)
+          </span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span id="complexity-badge" class="text-[10px] font-mono px-1.5 py-0.5 rounded-xs bg-carbon-800 text-zinc-300 border border-carbon-700">
+            Time: O(1)
+          </span>
+          <span id="status-pill" class="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-xs bg-sky-500/10 text-sky-400 border border-sky-500/30">
+            READY
+          </span>
+        </div>
+      </div>
+
+      <!-- Prominent Error Banner (Shown on Overflow / Underflow / Out of Bounds / Not Found) -->
+      <div id="error-banner" class="hidden px-4 py-2.5 bg-red-950/90 border-b border-red-500/60 text-red-200 font-mono text-xs flex items-center justify-between gap-3">
+        <div class="flex items-center gap-2">
+          <span class="px-1.5 py-0.5 rounded-xs bg-red-500 text-carbon-950 font-bold text-[10px] uppercase tracking-wider" id="error-code-tag">ERROR</span>
+          <span id="error-banner-msg" class="font-semibold text-red-200">Operation failed.</span>
+        </div>
+        <button onclick="hideErrorBanner()" class="text-[10px] text-red-300 hover:text-white uppercase font-mono px-1.5 py-0.5 rounded-xs border border-red-500/40">Dismiss</button>
+      </div>
+
+      <!-- Interactive Visual Stage (Dot-Matrix Technical Canvas) -->
+      <div id="visual-stage" class="flex-1 p-6 flex flex-col items-center justify-center relative bg-dot-matrix overflow-x-auto min-h-[380px]">
+        <!-- Dynamic structure rendered here -->
+      </div>
+
+      <!-- Auxiliary Output & State Bar (Traversals, Prefix Codes, Frontier Queue) -->
+      <div id="aux-tray" class="hidden px-4 py-2 bg-carbon-900 border-t border-carbon-700 font-mono text-xs text-sky-400">
+        <!-- Dynamic sequence output -->
+      </div>
+
+      <!-- Bottom Execution Trace & Scrubber Bar -->
+      <div class="px-4 py-2.5 bg-carbon-900 border-t border-carbon-700 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div class="flex items-center gap-2.5 flex-1 min-w-0">
+          <span class="text-[10px] font-mono uppercase tracking-widest px-1.5 py-0.5 rounded-xs bg-carbon-800 text-zinc-400 border border-carbon-700 shrink-0" id="step-counter">
+            Step 0/0
+          </span>
+          <p id="narration-text" class="text-xs font-mono text-zinc-200 truncate">
+            Select an operation above to run the visualization.
+          </p>
+        </div>
+
+        <!-- Transport & Speed Segmented Controls -->
+        <div class="flex items-center gap-1 font-mono text-[11px] shrink-0">
+          <div class="flex items-center bg-carbon-950 p-0.5 rounded-sm border border-carbon-700 mr-1.5">
+            <button onclick="setSpeed(0.5)" id="spd-0.5" class="px-1.5 py-0.5 rounded-xs text-[10px] text-zinc-400 hover:text-zinc-100">0.5x</button>
+            <button onclick="setSpeed(1)" id="spd-1" class="px-1.5 py-0.5 rounded-xs text-[10px] bg-carbon-800 text-zinc-100 font-semibold">1x</button>
+            <button onclick="setSpeed(2)" id="spd-2" class="px-1.5 py-0.5 rounded-xs text-[10px] text-zinc-400 hover:text-zinc-100">2x</button>
+          </div>
+          <button onclick="stepBackward()" id="btn-prev" class="px-2 py-1 rounded-sm bg-carbon-800 hover:bg-carbon-700 text-zinc-300 border border-carbon-700 disabled:opacity-30" title="Previous Step">
+            Prev
+          </button>
+          <button onclick="toggleAutoPlay()" id="btn-play" class="px-2.5 py-1 rounded-sm bg-zinc-100 hover:bg-white text-carbon-950 font-semibold transition">
+            Pause
+          </button>
+          <button onclick="stepForward()" id="btn-next" class="px-2 py-1 rounded-sm bg-carbon-800 hover:bg-carbon-700 text-zinc-300 border border-carbon-700 disabled:opacity-30" title="Next Step">
+            Next
+          </button>
+          <button onclick="resetCurrentDS()" class="px-2 py-1 rounded-sm bg-carbon-800 hover:bg-red-950/60 hover:text-red-300 hover:border-red-800/50 text-zinc-400 border border-carbon-700 ml-1">
+            Reset
+          </button>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- RIGHT HARDWARE & MEMORY INSPECTOR (4 Cols) -->
+    <aside class="lg:col-span-4 flex flex-col bg-carbon-900 divide-y divide-carbon-700">
+
+      <!-- 1. CACHE VIEW (8 SLOTS) -->
+      <div class="p-4 space-y-3">
+        <div class="flex items-center justify-between">
+          <div>
+            <span class="text-[10px] font-mono uppercase tracking-widest text-zinc-400 block">Cache</span>
+            <span id="cache-line-label" class="text-xs font-mono font-semibold text-zinc-200">Active Block: 0x00 – 0x1C</span>
+          </div>
+          <span id="hw-event-badge" class="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-xs bg-carbon-800 text-zinc-400 border border-carbon-700">
+            IDLE
+          </span>
+        </div>
+
+        <!-- 8-Slot Horizontal Strip -->
+        <div id="l1-cache-strip" class="grid grid-cols-8 gap-1 pt-1">
+          <!-- Populated dynamically -->
+        </div>
+
+        <div class="flex items-center justify-between text-[10px] font-mono text-zinc-500 pt-1">
+          <span>Cache Hit: Fast access</span>
+          <span>Cache Miss: Fetches from RAM</span>
+        </div>
+      </div>
+
+      <!-- 2. RAM VIEW (32 SLOTS: 0x00 - 0x7C) -->
+      <div class="p-4 flex-1 flex flex-col justify-between space-y-3">
+        <div class="flex items-center justify-between">
+          <div>
+            <span class="text-[10px] font-mono uppercase tracking-widest text-zinc-400 block">RAM</span>
+            <span class="text-xs font-mono text-zinc-300">Memory Addresses (0x00 – 0x7C)</span>
+          </div>
+          <span id="ram-mode-tag" class="text-[10px] font-mono px-2 py-0.5 rounded-xs bg-sky-500/10 text-sky-400 border border-sky-500/30">
+            Contiguous
+          </span>
+        </div>
+
+        <!-- 32-Slot Grid -->
+        <div id="ram-grid" class="grid grid-cols-8 gap-1 my-auto">
+          <!-- Populated dynamically -->
+        </div>
+
+        <!-- Legend -->
+        <div class="pt-2 border-t border-carbon-700 flex flex-wrap items-center justify-between gap-2 text-[10px] font-mono text-zinc-400">
+          <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-xs bg-sky-500/40 border border-sky-400 inline-block"></span>Contiguous</span>
+          <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-xs bg-amber-500/30 border border-amber-400 inline-block"></span>Linked Node</span>
+          <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-xs border border-emerald-400 inline-block"></span>In Cache</span>
+        </div>
+      </div>
+
+      <!-- 3. OPERATION LOG -->
+      <div class="p-4 bg-carbon-950 flex flex-col h-48">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-[10px] font-mono uppercase tracking-widest text-zinc-400">Operation Log</span>
+          <span class="text-[10px] font-mono text-zinc-500" id="trace-count">0 Events</span>
+        </div>
+        <div id="hw-trace-log" class="flex-1 overflow-y-auto font-mono text-[11px] space-y-1 pr-1 text-zinc-300">
+          <!-- Live entries appended here -->
+        </div>
+      </div>
+
+    </aside>
+
+  </main>
+
+  <script>
+    /* =========================================================================
+     *  DATA STRUCTURES & MEMORY EXPLORER ENGINE
+     * ========================================================================= */
+
+    let currentDS = 'array';
+
+    // Frame Playback State
+    let frames = [];
+    let currentFrameIdx = 0;
+    let isPlaying = true;
+    let playTimer = null;
+    let speedMultiplier = 1;
+    const BASE_DELAY = 640;
+
+    // Cache & RAM Stats
+    let hwStats = { hits: 0, misses: 0, totalCycles: 0 };
+    let l1CacheLineStart = 0;
+    let traceHistory = [];
+
+    // Selected Parameters
+    let selectedValue = 40;
+    let selectedIndex = 2;
+    let selectedTargetVal = 30;
+    let selectedVertex = 'A';
+
+    // -------------------------------------------------------------------------
+    // DATA STRUCTURE STATE MODELS
+    // -------------------------------------------------------------------------
+
+    // 01 ARRAY (Capacity 8, RAM 0x00..0x1C)
+    let arrayItems = [15, 30, 45, 60, 75];
+    const ARRAY_CAP = 8;
+
+    // 02 STACK (Capacity 6, RAM 0x20..0x34)
+    let stackItems = [12, 24, 36];
+    const STACK_CAP = 6;
+
+    // 03 QUEUE ('linear' default | 'circular' | 'priority')
+    let queueType = 'linear';
+    const LINEAR_Q_CAP = 6;
+    let linearQ = [10, 20, 30, null, null, null];
+    let linFront = 0;
+    let linRear = 2; // Index of last element; empty when linFront > linRear
+
+    let circularQ = [10, 20, 30, null, null, null, null, null];
+    let qFront = 0;
+    let qRear = 3;
+    let qCount = 3;
+
+    // Max-Priority Queue: Value IS the Priority (Larger Value = Higher Priority, Strictly Unique)
+    const PRIO_Q_CAP = 6;
+    const PRIO_VALUE_POOL = [95, 85, 72, 60, 54, 42, 33, 25, 18, 10];
+    let priorityQ = [85, 60, 42, 18];
+
+    // 04 LINKED LIST ('singly' | 'doubly')
+    let linkedType = 'singly';
+    let linkedNodes = [
+      { id: 1, val: 15, ramSlot: 2 },
+      { id: 2, val: 30, ramSlot: 14 },
+      { id: 3, val: 45, ramSlot: 27 },
+      { id: 4, val: 60, ramSlot: 9 }
+    ];
+    let nextNodeId = 5;
+
+    // 05 TREE ('bst' | 'avl' | 'heap' | 'huffman')
+    let treeType = 'bst';
+    let bstRoot = null;
+    let avlRoot = null;
+    let heapArray = [90, 70, 80, 40, 50, 65, 30];
+    let heapSortedCount = 0;
+
+    // GateVidyalay-style Huffman State
+    let huffmanPresetKey = 'GATE';
+    const HUFFMAN_PRESETS = {
+      GATE: [
+        { ch: 'A', freq: 5 },
+        { ch: 'B', freq: 9 },
+        { ch: 'C', freq: 12 },
+        { ch: 'D', freq: 13 },
+        { ch: 'E', freq: 16 },
+        { ch: 'F', freq: 45 }
+      ],
+      EXAMPLE2: [
+        { ch: 'A', freq: 4 },
+        { ch: 'B', freq: 7 },
+        { ch: 'C', freq: 10 },
+        { ch: 'D', freq: 15 },
+        { ch: 'E', freq: 20 },
+        { ch: 'F', freq: 44 }
+      ],
+      WORD: [
+        { ch: 'R', freq: 2 },
+        { ch: 'C', freq: 1 },
+        { ch: 'D', freq: 1 },
+        { ch: 'B', freq: 2 },
+        { ch: 'A', freq: 5 }
+      ]
+    };
+    let huffmanForest = []; // Sorted list of tree roots
+    let huffmanSlotSeed = 2;
+    let huffmanCodes = {};
+
+    // 06 GRAPH (Vertices A-G, Presets: 'network' | 'cyclic' | 'tree')
+    let graphPreset = 'network';
+    const GRAPH_COORDS = {
+      'A': { x: 260, y: 42,  ram: 1 },
+      'B': { x: 130, y: 120, ram: 11 },
+      'C': { x: 390, y: 120, ram: 21 },
+      'D': { x: 70,  y: 215, ram: 6 },
+      'E': { x: 200, y: 215, ram: 18 },
+      'F': { x: 320, y: 215, ram: 29 },
+      'G': { x: 450, y: 215, ram: 15 }
+    };
+    const GRAPH_ADJ = {
+      network: {
+        'A': ['B', 'C'],
+        'B': ['A', 'D', 'E'],
+        'C': ['A', 'F', 'G'],
+        'D': ['B'],
+        'E': ['B', 'F'],
+        'F': ['C', 'E'],
+        'G': ['C']
+      },
+      cyclic: {
+        'A': ['B', 'C'],
+        'B': ['C', 'D'],
+        'C': ['E', 'F'],
+        'D': ['E', 'A'],
+        'E': ['G'],
+        'F': ['G'],
+        'G': ['A']
+      },
+      tree: {
+        'A': ['B', 'C'],
+        'B': ['D', 'E'],
+        'C': ['F', 'G'],
+        'D': [], 'E': [], 'F': [], 'G': []
+      }
+    };
+
+    // -------------------------------------------------------------------------
+    // INITIALIZATION & HELPERS
+    // -------------------------------------------------------------------------
+    window.onload = function() {
+      initDefaultTrees();
+      resetHuffmanForest(huffmanPresetKey);
+      switchDS('array');
+    };
+
+    function toHexAddr(slot) {
+      return '0x' + (slot * 4).toString(16).toUpperCase().padStart(2, '0');
+    }
+
+    function getNodeHeight(node) {
+      if (!node) return 0;
+      return 1 + Math.max(getNodeHeight(node.left), getNodeHeight(node.right));
+    }
+
+    function updateAvlBF(node) {
+      if (!node) return;
+      updateAvlBF(node.left);
+      updateAvlBF(node.right);
+      const bfVal = getNodeHeight(node.left) - getNodeHeight(node.right);
+      node.bfVal = bfVal;
+      node.bf = bfVal > 0 ? `+${bfVal}` : `${bfVal}`;
+    }
+
+    function initDefaultTrees() {
+      bstRoot = {
+        val: 50, ramSlot: 3,
+        left: {
+          val: 30, ramSlot: 12,
+          left: { val: 20, ramSlot: 25, left: null, right: null },
+          right: { val: 40, ramSlot: 19, left: null, right: null }
+        },
+        right: {
+          val: 70, ramSlot: 8,
+          left: null,
+          right: { val: 80, ramSlot: 30, left: null, right: null }
+        }
+      };
+
+      avlRoot = {
+        val: 40, ramSlot: 5, bf: '0', bfVal: 0,
+        left: { val: 20, ramSlot: 17, bf: '0', bfVal: 0, left: null, right: null },
+        right: { val: 60, ramSlot: 28, bf: '0', bfVal: 0, left: null, right: null }
+      };
+      updateAvlBF(avlRoot);
+    }
+
+    function setComplexity(badgeText) {
+      document.getElementById('complexity-badge').innerText = badgeText;
+    }
+
+    function hideErrorBanner() {
+      document.getElementById('error-banner').classList.add('hidden');
+    }
+
+    // -------------------------------------------------------------------------
+    // PLAYBACK CONTROLLER
+    // -------------------------------------------------------------------------
+    function playFrames(newFrames) {
+      if (playTimer) clearTimeout(playTimer);
+      frames = newFrames;
+      currentFrameIdx = 0;
+      isPlaying = true;
+      updateTransportUI();
+      renderCurrentFrame();
+      scheduleNextFrame();
+    }
+
+    function scheduleNextFrame() {
+      if (!isPlaying) return;
+      if (currentFrameIdx < frames.length - 1) {
+        const delay = Math.round(BASE_DELAY / speedMultiplier);
+        playTimer = setTimeout(() => {
+          currentFrameIdx++;
+          renderCurrentFrame();
+          scheduleNextFrame();
+        }, delay);
+      } else {
+        isPlaying = false;
+        updateTransportUI();
+      }
+    }
+
+    function toggleAutoPlay() {
+      if (frames.length === 0) return;
+      if (currentFrameIdx >= frames.length - 1) {
+        currentFrameIdx = 0;
+        isPlaying = true;
+        renderCurrentFrame();
+        scheduleNextFrame();
+      } else {
+        isPlaying = !isPlaying;
+        if (isPlaying) scheduleNextFrame();
+        else if (playTimer) clearTimeout(playTimer);
+      }
+      updateTransportUI();
+    }
+
+    function stepForward() {
+      if (playTimer) clearTimeout(playTimer);
+      isPlaying = false;
+      updateTransportUI();
+      if (currentFrameIdx < frames.length - 1) {
+        currentFrameIdx++;
+        renderCurrentFrame();
+      }
+    }
+
+    function stepBackward() {
+      if (playTimer) clearTimeout(playTimer);
+      isPlaying = false;
+      updateTransportUI();
+      if (currentFrameIdx > 0) {
+        currentFrameIdx--;
+        renderCurrentFrame();
+      }
+    }
+
+    function setSpeed(spd) {
+      speedMultiplier = spd;
+      [0.5, 1, 2].forEach(s => {
+        const btn = document.getElementById(`spd-${s}`);
+        if (btn) {
+          btn.className = s === spd
+            ? "px-1.5 py-0.5 rounded-xs text-[10px] bg-carbon-800 text-zinc-100 font-semibold"
+            : "px-1.5 py-0.5 rounded-xs text-[10px] text-zinc-400 hover:text-zinc-100";
+        }
+      });
+    }
+
+    function updateTransportUI() {
+      const btn = document.getElementById('btn-play');
+      btn.innerText = isPlaying ? 'Pause' : 'Play';
+      document.getElementById('btn-prev').disabled = (currentFrameIdx <= 0);
+      document.getElementById('btn-next').disabled = (currentFrameIdx >= frames.length - 1);
+      document.getElementById('step-counter').innerText = `Step ${currentFrameIdx + 1}/${frames.length}`;
+    }
+
+    // -------------------------------------------------------------------------
+    // MODULE SWITCHER & TOOLBAR GENERATOR
+    // -------------------------------------------------------------------------
+    function switchDS(ds) {
+      if (playTimer) clearTimeout(playTimer);
+      currentDS = ds;
+      hideErrorBanner();
+
+      document.querySelectorAll('.ds-tab').forEach(btn => {
+        btn.className = "ds-tab px-2.5 py-1 rounded-xs font-mono text-[11px] font-medium transition text-zinc-400 hover:text-zinc-100 whitespace-nowrap";
+      });
+      const activeTab = document.getElementById(`ds-tab-${ds}`);
+      if (activeTab) {
+        activeTab.className = "ds-tab px-2.5 py-1 rounded-xs font-mono text-[11px] font-semibold transition bg-zinc-100 text-carbon-950 whitespace-nowrap";
+      }
+
+      document.getElementById('aux-tray').classList.add('hidden');
+      buildControlsForDS();
+      createInitialSnapshot();
+    }
+
+    function resetCurrentDS() {
+      hwStats = { hits: 0, misses: 0, totalCycles: 0 };
+      traceHistory = [];
+      hideErrorBanner();
+      if (currentDS === 'array') arrayItems = [15, 30, 45, 60, 75];
+      if (currentDS === 'stack') stackItems = [12, 24, 36];
+      if (currentDS === 'queue') {
+        linearQ = [10, 20, 30, null, null, null];
+        linFront = 0;
+        linRear = 2;
+        circularQ = [10, 20, 30, null, null, null, null, null];
+        qFront = 0; qRear = 3; qCount = 3;
+        priorityQ = [85, 60, 42, 18];
+      }
+      if (currentDS === 'linked') {
+        linkedNodes = [
+          { id: 1, val: 15, ramSlot: 2 },
+          { id: 2, val: 30, ramSlot: 14 },
+          { id: 3, val: 45, ramSlot: 27 },
+          { id: 4, val: 60, ramSlot: 9 }
+        ];
+      }
+      if (currentDS === 'tree') {
+        initDefaultTrees();
+        heapArray = [90, 70, 80, 40, 50, 65, 30];
+        heapSortedCount = 0;
+        resetHuffmanForest(huffmanPresetKey);
+      }
+      buildControlsForDS();
+      createInitialSnapshot();
+    }
+
+    function buildControlsForDS() {
+      const subBar = document.getElementById('submode-bar');
+      const inputDeck = document.getElementById('input-deck');
+      const actionDeck = document.getElementById('action-deck');
+      subBar.innerHTML = '';
+      inputDeck.innerHTML = '';
+      actionDeck.innerHTML = '';
+      subBar.classList.add('hidden');
+
+      if (currentDS === 'array') {
+        document.getElementById('canvas-title').innerText = `Array (Capacity: ${ARRAY_CAP})`;
+        setComplexity('Access: O(1) | Shift: O(N)');
+        const deleteCandidates = Array.from(new Set([...arrayItems, 15, 33, 50, 77, 99])).sort((a, b) => a - b);
+        if (!deleteCandidates.includes(selectedTargetVal)) selectedTargetVal = deleteCandidates[0];
+        inputDeck.innerHTML = `
+          ${renderValuePills([10, 25, 40, 55, 70, 85, 99])}
+          <div class="flex items-center gap-2.5 bg-carbon-950 px-3 py-1 rounded-sm border border-carbon-700 font-mono">
+            <span class="text-[10px] text-zinc-400 uppercase tracking-wider">Position:</span>
+            <input type="range" min="0" max="${arrayItems.length}" value="${Math.min(selectedIndex, arrayItems.length)}" 
+              oninput="selectedIndex=parseInt(this.value); document.getElementById('idx-badge').innerText=this.value; document.getElementById('btn-arr-ins').innerText='Insert at ['+this.value+'] ('+selectedValue+')'"
+              class="w-20 cursor-pointer">
+            <span id="idx-badge" class="text-xs font-bold text-sky-400 w-3 text-center">${Math.min(selectedIndex, arrayItems.length)}</span>
+          </div>
+          ${renderExistingValuePills(deleteCandidates, 'Delete Value')}
+        `;
+        actionDeck.innerHTML = `
+          <button id="btn-arr-ins" onclick="arrayInsertAtPos()" class="px-3 py-1.5 rounded-sm bg-zinc-100 hover:bg-white text-carbon-950 font-mono font-semibold text-xs transition">
+            Insert at [${Math.min(selectedIndex, arrayItems.length)}] (${selectedValue})
+          </button>
+          <button onclick="arrayDeleteByValue()" class="px-3 py-1.5 rounded-sm bg-carbon-800 hover:bg-carbon-700 text-zinc-200 border border-carbon-700 font-mono text-xs transition">
+            Delete Value (${selectedTargetVal})
+          </button>
+        `;
+      }
+
+      else if (currentDS === 'stack') {
+        document.getElementById('canvas-title').innerText = `Stack — LIFO (Capacity: ${STACK_CAP})`;
+        setComplexity('Push / Pop: O(1)');
+        inputDeck.innerHTML = renderValuePills([12, 24, 36, 48, 60, 72, 84, 96]);
+        actionDeck.innerHTML = `
+          <button onclick="stackPush()" class="px-3 py-1.5 rounded-sm bg-zinc-100 hover:bg-white text-carbon-950 font-mono font-semibold text-xs transition">
+            Push (${selectedValue})
+          </button>
+          <button onclick="stackPop()" class="px-3 py-1.5 rounded-sm bg-carbon-800 hover:bg-carbon-700 text-zinc-200 border border-carbon-700 font-mono text-xs transition">
+            Pop
+          </button>
+          <button onclick="stackPeek()" class="px-3 py-1.5 rounded-sm bg-carbon-800 hover:bg-carbon-700 text-sky-400 border border-carbon-700 font-mono text-xs transition">
+            Peek
+          </button>
+          <button onclick="stackIsEmpty()" class="px-3 py-1.5 rounded-sm bg-carbon-800 hover:bg-carbon-700 text-zinc-400 border border-carbon-700 font-mono text-xs transition">
+            isEmpty
+          </button>
+          <button onclick="stackIsFull()" class="px-3 py-1.5 rounded-sm bg-carbon-800 hover:bg-carbon-700 text-zinc-400 border border-carbon-700 font-mono text-xs transition">
+            isFull
+          </button>
+        `;
+      }
+
+      else if (currentDS === 'queue') {
+        const isPrio = queueType === 'priority';
+        subBar.classList.remove('hidden');
+        subBar.innerHTML = `
+          <div class="flex flex-wrap items-center gap-2 font-mono">
+            <span class="text-[10px] text-zinc-500 uppercase tracking-widest">Queue Type:</span>
+            <button onclick="queueType='linear'; hideErrorBanner(); buildControlsForDS(); createInitialSnapshot();" class="px-2.5 py-0.5 rounded-xs text-[11px] font-medium transition ${queueType==='linear' ? 'bg-sky-500/20 text-sky-400 border border-sky-500/40' : 'text-zinc-400 hover:text-zinc-200'}">Linear Queue (Default)</button>
+            <button onclick="queueType='circular'; hideErrorBanner(); buildControlsForDS(); createInitialSnapshot();" class="px-2.5 py-0.5 rounded-xs text-[11px] font-medium transition ${queueType==='circular' ? 'bg-sky-500/20 text-sky-400 border border-sky-500/40' : 'text-zinc-400 hover:text-zinc-200'}">Circular Queue</button>
+            <button onclick="queueType='priority'; hideErrorBanner(); buildControlsForDS(); createInitialSnapshot();" class="px-2.5 py-0.5 rounded-xs text-[11px] font-medium transition ${queueType==='priority' ? 'bg-sky-500/20 text-sky-400 border border-sky-500/40' : 'text-zinc-400 hover:text-zinc-200'}">Max-Priority Queue</button>
+          </div>
+        `;
+        document.getElementById('canvas-title').innerText =
+          queueType === 'linear' ? `Linear Queue — FIFO (Capacity: ${LINEAR_Q_CAP})` :
+          (queueType === 'circular' ? 'Circular Queue — Ring Buffer (Capacity: 8)' : `Max-Priority Queue — Value = Priority (Capacity: ${PRIO_Q_CAP})`);
+        setComplexity(isPrio ? 'Enqueue (Sorted): O(N) | Dequeue Max: O(1)' : 'Enqueue / Dequeue: O(1)');
+
+        if (isPrio) {
+          // Ensure selectedValue is not already in priorityQ so priorities remain strictly unique
+          if (!PRIO_VALUE_POOL.includes(selectedValue) || priorityQ.includes(selectedValue)) {
+            const firstAvailable = PRIO_VALUE_POOL.find(v => !priorityQ.includes(v));
+            if (firstAvailable !== undefined) selectedValue = firstAvailable;
+          }
+          inputDeck.innerHTML = renderUniquePriorityPills(PRIO_VALUE_POOL, priorityQ);
+        } else {
+          inputDeck.innerHTML = renderValuePills([10, 20, 35, 50, 65, 80, 95]);
+        }
+
+        actionDeck.innerHTML = `
+          <button onclick="queueEnqueue()" class="px-3 py-1.5 rounded-sm bg-zinc-100 hover:bg-white text-carbon-950 font-mono font-semibold text-xs transition">
+            Enqueue (${selectedValue}${isPrio ? ' — Prio ' + selectedValue : ''})
+          </button>
+          <button onclick="queueDequeue()" class="px-3 py-1.5 rounded-sm bg-carbon-800 hover:bg-carbon-700 text-zinc-200 border border-carbon-700 font-mono text-xs transition">
+            Dequeue${isPrio ? ' Max' : ''}
+          </button>
+          <button onclick="queueIsEmpty()" class="px-3 py-1.5 rounded-sm bg-carbon-800 hover:bg-carbon-700 text-zinc-400 border border-carbon-700 font-mono text-xs transition">
+            isEmpty
+          </button>
+          <button onclick="queueIsFull()" class="px-3 py-1.5 rounded-sm bg-carbon-800 hover:bg-carbon-700 text-zinc-400 border border-carbon-700 font-mono text-xs transition">
+            isFull
+          </button>
+        `;
+      }
+
+      else if (currentDS === 'linked') {
+        subBar.classList.remove('hidden');
+        subBar.innerHTML = `
+          <div class="flex items-center gap-2 font-mono">
+            <span class="text-[10px] text-zinc-500 uppercase tracking-widest">List Type:</span>
+            <button onclick="linkedType='singly'; hideErrorBanner(); buildControlsForDS(); createInitialSnapshot();" class="px-2.5 py-0.5 rounded-xs text-[11px] font-medium transition ${linkedType==='singly' ? 'bg-sky-500/20 text-sky-400 border border-sky-500/40' : 'text-zinc-400 hover:text-zinc-200'}">Singly Linked (→)</button>
+            <button onclick="linkedType='doubly'; hideErrorBanner(); buildControlsForDS(); createInitialSnapshot();" class="px-2.5 py-0.5 rounded-xs text-[11px] font-medium transition ${linkedType==='doubly' ? 'bg-sky-500/20 text-sky-400 border border-sky-500/40' : 'text-zinc-400 hover:text-zinc-200'}">Doubly Linked (⇄)</button>
+          </div>
+        `;
+        document.getElementById('canvas-title').innerText = linkedType === 'singly'
+          ? 'Singly Linked List (Unidirectional)'
+          : 'Doubly Linked List (Prev ⇄ Next)';
+        setComplexity('Head Ops: O(1) | Search / Tail: O(N)');
+
+        const existingVals = linkedNodes.map(n => n.val);
+        if (!existingVals.includes(selectedTargetVal) && existingVals.length > 0) {
+          selectedTargetVal = existingVals[0];
+        }
+
+        inputDeck.innerHTML = `
+          ${renderValuePills([11, 25, 38, 52, 77, 90])}
+          ${renderExistingValuePills(existingVals, 'Target Value')}
+        `;
+
+        const traversalBtns = linkedType === 'singly'
+          ? `<button onclick="llTraverseForward()" class="px-2.5 py-1 rounded-sm bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 font-mono font-semibold text-[11px]">Traverse Forward (Head → Tail)</button>`
+          : `
+            <button onclick="llTraverseForward()" class="px-2.5 py-1 rounded-sm bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 font-mono font-semibold text-[11px]">Traverse Forward (Head → Tail)</button>
+            <button onclick="llTraverseBackward()" class="px-2.5 py-1 rounded-sm bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-mono font-semibold text-[11px]">Traverse Backward (Tail → Head)</button>
+          `;
+
+        actionDeck.innerHTML = `
+          <button onclick="llInsertBeg()" class="px-2.5 py-1 rounded-sm bg-zinc-100 hover:bg-white text-carbon-950 font-mono font-semibold text-[11px]">Insert at Beginning (${selectedValue})</button>
+          <button onclick="llInsertEnd()" class="px-2.5 py-1 rounded-sm bg-zinc-100 hover:bg-white text-carbon-950 font-mono font-semibold text-[11px]">Insert at End (${selectedValue})</button>
+          <button onclick="llInsertBefore()" class="px-2.5 py-1 rounded-sm bg-carbon-800 hover:bg-carbon-700 text-sky-400 border border-carbon-700 font-mono text-[11px]">Insert Before ${selectedTargetVal}</button>
+          <button onclick="llInsertAfter()" class="px-2.5 py-1 rounded-sm bg-carbon-800 hover:bg-carbon-700 text-sky-400 border border-carbon-700 font-mono text-[11px]">Insert After ${selectedTargetVal}</button>
+          <button onclick="llDeleteBeg()" class="px-2.5 py-1 rounded-sm bg-carbon-800 hover:bg-carbon-700 text-zinc-300 border border-carbon-700 font-mono text-[11px]">Delete Beginning</button>
+          <button onclick="llDeleteEnd()" class="px-2.5 py-1 rounded-sm bg-carbon-800 hover:bg-carbon-700 text-zinc-300 border border-carbon-700 font-mono text-[11px]">Delete End</button>
+          <button onclick="llDeleteByVal()" class="px-2.5 py-1 rounded-sm bg-carbon-800 hover:bg-carbon-700 text-red-400 border border-carbon-700 font-mono text-[11px]">Delete Value (${selectedTargetVal})</button>
+          <button onclick="llDeleteAfter()" class="px-2.5 py-1 rounded-sm bg-carbon-800 hover:bg-carbon-700 text-red-400 border border-carbon-700 font-mono text-[11px]">Delete After ${selectedTargetVal}</button>
+          ${traversalBtns}
+        `;
+      }
+
+      else if (currentDS === 'tree') {
+        subBar.classList.remove('hidden');
+        subBar.innerHTML = `
+          <div class="flex flex-wrap items-center gap-1.5 font-mono">
+            <span class="text-[10px] text-zinc-500 uppercase tracking-widest mr-1">Tree Type:</span>
+            <button onclick="treeType='bst'; hideErrorBanner(); buildControlsForDS(); createInitialSnapshot();" class="px-2.5 py-0.5 rounded-xs text-[11px] font-medium transition ${treeType==='bst' ? 'bg-sky-500/20 text-sky-400 border border-sky-500/40' : 'text-zinc-400 hover:text-zinc-200'}">Binary Search Tree (BST)</button>
+            <button onclick="treeType='avl'; hideErrorBanner(); buildControlsForDS(); createInitialSnapshot();" class="px-2.5 py-0.5 rounded-xs text-[11px] font-medium transition ${treeType==='avl' ? 'bg-sky-500/20 text-sky-400 border border-sky-500/40' : 'text-zinc-400 hover:text-zinc-200'}">AVL Tree (Insert &amp; Rotations)</button>
+            <button onclick="treeType='heap'; hideErrorBanner(); buildControlsForDS(); createInitialSnapshot();" class="px-2.5 py-0.5 rounded-xs text-[11px] font-medium transition ${treeType==='heap' ? 'bg-sky-500/20 text-sky-400 border border-sky-500/40' : 'text-zinc-400 hover:text-zinc-200'}">Max-Heap &amp; Heap Sort</button>
+            <button onclick="treeType='huffman'; hideErrorBanner(); buildControlsForDS(); createInitialSnapshot();" class="px-2.5 py-0.5 rounded-xs text-[11px] font-medium transition ${treeType==='huffman' ? 'bg-sky-500/20 text-sky-400 border border-sky-500/40' : 'text-zinc-400 hover:text-zinc-200'}">Huffman Coding Tree</button>
+          </div>
+        `;
+
+        if (treeType === 'bst') {
+          document.getElementById('canvas-title').innerText = 'Binary Search Tree (BST)';
+          setComplexity('Search / Insert / Delete: O(log N)');
+          const bstVals = [];
+          collectTreeValues(bstRoot, bstVals);
+          if (!bstVals.includes(selectedTargetVal) && bstVals.length > 0) selectedTargetVal = bstVals[0];
+
+          inputDeck.innerHTML = `
+            ${renderValuePills([10, 25, 35, 45, 60, 75, 90])}
+            ${renderExistingValuePills(bstVals, 'Target Node')}
+          `;
+          actionDeck.innerHTML = `
+            <button onclick="bstInsert()" class="px-2.5 py-1 rounded-sm bg-zinc-100 hover:bg-white text-carbon-950 font-mono font-semibold text-[11px]">Insert (${selectedValue})</button>
+            <button onclick="bstDelete(selectedTargetVal)" class="px-2.5 py-1 rounded-sm bg-carbon-800 hover:bg-carbon-700 text-red-400 border border-carbon-700 font-mono text-[11px]">Delete (${selectedTargetVal})</button>
+            <button onclick="bstDeleteCasePreset(80)" class="px-2.5 py-1 rounded-sm bg-carbon-800 hover:bg-carbon-700 text-zinc-300 border border-carbon-700 font-mono text-[11px]">Delete Leaf (80)</button>
+            <button onclick="bstDeleteCasePreset(70)" class="px-2.5 py-1 rounded-sm bg-carbon-800 hover:bg-carbon-700 text-zinc-300 border border-carbon-700 font-mono text-[11px]">Delete 1-Child (70)</button>
+            <button onclick="bstDeleteCasePreset(50)" class="px-2.5 py-1 rounded-sm bg-carbon-800 hover:bg-carbon-700 text-zinc-300 border border-carbon-700 font-mono text-[11px]">Delete 2-Children (50)</button>
+            <button onclick="runTreeTraversal('inorder')" class="px-2.5 py-1 rounded-sm bg-sky-500/15 text-sky-400 border border-sky-500/30 font-mono text-[11px]">Inorder</button>
+            <button onclick="runTreeTraversal('preorder')" class="px-2.5 py-1 rounded-sm bg-sky-500/15 text-sky-400 border border-sky-500/30 font-mono text-[11px]">Preorder</button>
+            <button onclick="runTreeTraversal('postorder')" class="px-2.5 py-1 rounded-sm bg-sky-500/15 text-sky-400 border border-sky-500/30 font-mono text-[11px]">Postorder</button>
+          `;
+        }
+        else if (treeType === 'avl') {
+          document.getElementById('canvas-title').innerText = 'AVL Self-Balancing Tree (Insert & Rotations)';
+          setComplexity('Insert / Balance: O(log N)');
+          inputDeck.innerHTML = `
+            ${renderValuePills([5, 10, 15, 25, 30, 35, 50, 70, 80])}
+          `;
+          actionDeck.innerHTML = `
+            <button onclick="avlInsertValue()" class="px-3 py-1.5 rounded-sm bg-zinc-100 hover:bg-white text-carbon-950 font-mono font-semibold text-xs">Insert (${selectedValue})</button>
+            <button onclick="runAvlDemo('LL')" class="px-2.5 py-1.5 rounded-sm bg-carbon-800 hover:bg-carbon-700 text-zinc-200 border border-carbon-700 font-mono text-xs">Demo LL Rotation</button>
+            <button onclick="runAvlDemo('RR')" class="px-2.5 py-1.5 rounded-sm bg-carbon-800 hover:bg-carbon-700 text-zinc-200 border border-carbon-700 font-mono text-xs">Demo RR Rotation</button>
+            <button onclick="runAvlDemo('LR')" class="px-2.5 py-1.5 rounded-sm bg-carbon-800 hover:bg-carbon-700 text-zinc-200 border border-carbon-700 font-mono text-xs">Demo LR Rotation</button>
+            <button onclick="runAvlDemo('RL')" class="px-2.5 py-1.5 rounded-sm bg-carbon-800 hover:bg-carbon-700 text-zinc-200 border border-carbon-700 font-mono text-xs">Demo RL Rotation</button>
+            <button onclick="runTreeTraversal('inorder')" class="px-2.5 py-1.5 rounded-sm bg-sky-500/15 text-sky-400 border border-sky-500/30 font-mono text-xs">Inorder</button>
+            <button onclick="runTreeTraversal('preorder')" class="px-2.5 py-1.5 rounded-sm bg-sky-500/15 text-sky-400 border border-sky-500/30 font-mono text-xs">Preorder</button>
+            <button onclick="runTreeTraversal('postorder')" class="px-2.5 py-1.5 rounded-sm bg-sky-500/15 text-sky-400 border border-sky-500/30 font-mono text-xs">Postorder</button>
+          `;
+        }
+        else if (treeType === 'heap') {
+          document.getElementById('canvas-title').innerText = 'Binary Max-Heap & Heap Sort';
+          setComplexity('Heapify: O(N) | Heap Sort: O(N log N)');
+          inputDeck.innerHTML = renderValuePills([99, 85, 72, 64, 45, 25]);
+          actionDeck.innerHTML = `
+            <button onclick="heapInsert()" class="px-3 py-1.5 rounded-sm bg-zinc-100 hover:bg-white text-carbon-950 font-mono font-semibold text-xs">Insert (${selectedValue})</button>
+            <button onclick="heapBuildHeapify()" class="px-3 py-1.5 rounded-sm bg-carbon-800 hover:bg-carbon-700 text-sky-400 border border-carbon-700 font-mono text-xs">Heapify Array</button>
+            <button onclick="heapRunSort()" class="px-3 py-1.5 rounded-sm bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 font-mono font-semibold text-xs">Run Heap Sort</button>
+          `;
+        }
+        else if (treeType === 'huffman') {
+          document.getElementById('canvas-title').innerText = 'Huffman Coding — Stepwise Tree Construction';
+          setComplexity('Build: O(N log N)');
+          const presets = [
+            { key: 'GATE', label: 'Standard [A:5, B:9, C:12, D:13, E:16, F:45]' },
+            { key: 'EXAMPLE2', label: 'Set 2 [A:4, B:7, C:10, D:15, E:20, F:44]' },
+            { key: 'WORD', label: '"ABRACADABRA" Frequencies' }
+          ];
+          inputDeck.innerHTML = `
+            <div class="flex flex-wrap items-center gap-1.5 font-mono">
+              <span class="text-[10px] text-zinc-400 uppercase tracking-wider mr-1">Initial Sorted Frequencies:</span>
+              ${presets.map(p => `
+                <button onclick="huffmanPresetKey='${p.key}'; resetHuffmanForest('${p.key}'); buildControlsForDS(); createInitialSnapshot();" class="px-2.5 py-1 rounded-xs text-[11px] font-semibold ${huffmanPresetKey===p.key ? 'bg-zinc-100 text-carbon-950' : 'bg-carbon-800 text-zinc-400 hover:text-zinc-200 border border-carbon-700'}">
+                  ${p.label}
+                </button>
+              `).join('')}
+            </div>
+          `;
+          actionDeck.innerHTML = `
+            <button onclick="huffmanStepMerge()" class="px-3 py-1.5 rounded-sm bg-zinc-100 hover:bg-white text-carbon-950 font-mono font-semibold text-xs">
+              Next Merge Step (Combine 2 Min Nodes)
+            </button>
+            <button onclick="runHuffmanBuildAll()" class="px-3 py-1.5 rounded-sm bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 font-mono font-semibold text-xs">
+              Auto-Build Full Tree
+            </button>
+            <button onclick="resetHuffmanForest(huffmanPresetKey); createInitialSnapshot();" class="px-3 py-1.5 rounded-sm bg-carbon-800 hover:bg-carbon-700 text-zinc-300 border border-carbon-700 font-mono text-xs">
+              Reset to Sorted Leaf Nodes
+            </button>
+          `;
+        }
+      }
+
+      else if (currentDS === 'graph') {
+        subBar.classList.remove('hidden');
+        subBar.innerHTML = `
+          <div class="flex items-center gap-2 font-mono">
+            <span class="text-[10px] text-zinc-500 uppercase tracking-widest">Graph Type:</span>
+            <button onclick="graphPreset='network'; buildControlsForDS(); createInitialSnapshot();" class="px-2.5 py-0.5 rounded-xs text-[11px] font-medium ${graphPreset==='network' ? 'bg-sky-500/20 text-sky-400 border border-sky-500/40' : 'text-zinc-400 hover:text-zinc-200'}">Undirected Mesh</button>
+            <button onclick="graphPreset='cyclic'; buildControlsForDS(); createInitialSnapshot();" class="px-2.5 py-0.5 rounded-xs text-[11px] font-medium ${graphPreset==='cyclic' ? 'bg-sky-500/20 text-sky-400 border border-sky-500/40' : 'text-zinc-400 hover:text-zinc-200'}">Directed Cyclic (Arrows)</button>
+            <button onclick="graphPreset='tree'; buildControlsForDS(); createInitialSnapshot();" class="px-2.5 py-0.5 rounded-xs text-[11px] font-medium ${graphPreset==='tree' ? 'bg-sky-500/20 text-sky-400 border border-sky-500/40' : 'text-zinc-400 hover:text-zinc-200'}">Directed Hierarchy</button>
+          </div>
+        `;
+        document.getElementById('canvas-title').innerText = graphPreset === 'network'
+          ? 'Undirected Graph — BFS & DFS'
+          : 'Directed Graph (with Arrowheads) — BFS & DFS';
+        setComplexity('Traversal: O(V + E)');
+        inputDeck.innerHTML = `
+          <div class="flex items-center gap-1 bg-carbon-950 px-2.5 py-1 rounded-sm border border-carbon-700 font-mono">
+            <span class="text-[10px] text-zinc-400 uppercase tracking-wider mr-1">Start Vertex:</span>
+            ${['A','B','C','D','E','F','G'].map(v => `
+              <button onclick="selectedVertex='${v}'; buildControlsForDS();" class="w-6 h-6 rounded-xs font-mono font-semibold text-[11px] transition ${selectedVertex===v ? 'bg-zinc-100 text-carbon-950' : 'bg-carbon-800 text-zinc-400 hover:text-zinc-200'}">
+                ${v}
+              </button>
+            `).join('')}
+          </div>
+        `;
+        actionDeck.innerHTML = `
+          <button onclick="runGraphTraversal('BFS')" class="px-3 py-1.5 rounded-sm bg-zinc-100 hover:bg-white text-carbon-950 font-mono font-semibold text-xs">
+            Run BFS (from ${selectedVertex})
+          </button>
+          <button onclick="runGraphTraversal('DFS')" class="px-3 py-1.5 rounded-sm bg-carbon-800 hover:bg-carbon-700 text-sky-400 border border-carbon-700 font-mono text-xs">
+            Run DFS (from ${selectedVertex})
+          </button>
+        `;
+      }
+    }
+
+    function renderValuePills(vals) {
+      if (!vals.includes(selectedValue)) selectedValue = vals[0];
+      return `
+        <div class="flex items-center gap-1 bg-carbon-950 px-2.5 py-1 rounded-sm border border-carbon-700 font-mono">
+          <span class="text-[10px] text-zinc-400 uppercase tracking-wider mr-1">Value:</span>
+          ${vals.map(v => `
+            <button onclick="selectedValue=${v}; buildControlsForDS();" class="px-2 py-0.5 rounded-xs text-[11px] font-semibold transition ${selectedValue===v ? 'bg-zinc-100 text-carbon-950' : 'bg-carbon-800 text-zinc-400 hover:text-zinc-200'}">
+              ${v}
+            </button>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function renderUniquePriorityPills(vals, activeQueue) {
+      return `
+        <div class="flex flex-wrap items-center gap-1 bg-carbon-950 px-2.5 py-1 rounded-sm border border-carbon-700 font-mono">
+          <span class="text-[10px] text-zinc-400 uppercase tracking-wider mr-1">Value = Priority (Larger = Higher Priority):</span>
+          ${vals.map(v => {
+            const taken = activeQueue.includes(v);
+            const isSel = selectedValue === v && !taken;
+            return `
+              <button 
+                onclick="${taken ? '' : `selectedValue=${v}; buildControlsForDS();`}" 
+                ${taken ? 'disabled title="Priority already in queue (Strictly Unique)"' : ''}
+                class="px-2 py-0.5 rounded-xs text-[11px] font-semibold transition ${
+                  isSel ? 'bg-zinc-100 text-carbon-950' : 
+                  (taken ? 'bg-carbon-900 text-zinc-600 line-through cursor-not-allowed opacity-45' : 'bg-carbon-800 text-zinc-400 hover:text-zinc-200')
+                }">
+                ${v}
+              </button>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    function renderExistingValuePills(vals, label) {
+      if (vals.length === 0) return '';
+      if (!vals.includes(selectedTargetVal)) selectedTargetVal = vals[0];
+      return `
+        <div class="flex items-center gap-1 bg-carbon-950 px-2.5 py-1 rounded-sm border border-carbon-700 font-mono">
+          <span class="text-[10px] text-zinc-400 uppercase tracking-wider mr-1">${label}:</span>
+          ${vals.map(v => `
+            <button onclick="selectedTargetVal=${v}; buildControlsForDS();" class="px-2 py-0.5 rounded-xs text-[11px] font-semibold transition ${selectedTargetVal===v ? 'bg-sky-400 text-carbon-950' : 'bg-carbon-800 text-zinc-400 hover:text-zinc-200'}">
+              ${v}
+            </button>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function collectTreeValues(node, arr) {
+      if (!node) return;
+      arr.push(node.val);
+      collectTreeValues(node.left, arr);
+      collectTreeValues(node.right, arr);
+    }
+
+    // -------------------------------------------------------------------------
+    // FRAME SNAPSHOT & HARDWARE SIMULATION ENGINE
+    // -------------------------------------------------------------------------
+    function createInitialSnapshot() {
+      const f = makeFrame({
+        narration: `Ready. Choose an operation above to see the step-by-step animation and memory updates.`,
+        status: 'READY',
+        ramAccessSlot: null
+      });
+      frames = [f];
+      currentFrameIdx = 0;
+      isPlaying = false;
+      updateTransportUI();
+      renderCurrentFrame();
+    }
+
+    function makeFrame(opts = {}) {
+      let hwEvent = 'IDLE';
+      let traceLine = null;
+
+      if (opts.isError) {
+        hwEvent = 'ERROR';
+        traceLine = { type: 'ERROR', text: `${opts.status || 'ERROR'}: ${opts.narration}` };
+      } else if (opts.ramAccessSlot !== null && opts.ramAccessSlot !== undefined) {
+        const slot = opts.ramAccessSlot;
+        const lineStart = Math.floor(slot / 8) * 8;
+        const hexAddr = toHexAddr(slot);
+
+        if (lineStart === l1CacheLineStart && (hwStats.hits + hwStats.misses > 0)) {
+          hwStats.hits++;
+          hwStats.totalCycles += 4;
+          hwEvent = 'CACHE HIT';
+          traceLine = { type: 'HIT', text: `Read ${hexAddr} -> Found in Cache` };
+        } else {
+          hwStats.misses++;
+          hwStats.totalCycles += 180;
+          l1CacheLineStart = lineStart;
+          hwEvent = 'CACHE MISS';
+          traceLine = { type: 'MISS', text: `Read ${hexAddr} -> Loaded block ${toHexAddr(lineStart)}..${toHexAddr(lineStart+7)} from RAM` };
+        }
+      }
+
+      if (traceLine) {
+        traceHistory.unshift(traceLine);
+        if (traceHistory.length > 24) traceHistory.pop();
+      }
+
+      // Build 32-word RAM map
+      const ramSlots = Array(32).fill(null).map((_, i) => ({
+        slot: i, hex: toHexAddr(i), val: null, label: '', kind: 'empty', active: opts.ramAccessSlot === i
+      }));
+
+      if (currentDS === 'array') {
+        arrayItems.forEach((v, i) => {
+          ramSlots[i] = { slot: i, hex: toHexAddr(i), val: v, label: `[${i}]`, kind: 'contiguous', active: opts.ramAccessSlot === i };
+        });
+      } else if (currentDS === 'stack') {
+        stackItems.forEach((v, i) => {
+          const s = 8 + i;
+          ramSlots[s] = { slot: s, hex: toHexAddr(s), val: v, label: i === stackItems.length - 1 ? 'TOP' : `S[${i}]`, kind: 'contiguous', active: opts.ramAccessSlot === s };
+        });
+      } else if (currentDS === 'queue') {
+        if (queueType === 'linear') {
+          linearQ.forEach((v, i) => {
+            const s = 16 + i;
+            if (v !== null && i >= linFront && i <= linRear) {
+              ramSlots[s] = { slot: s, hex: toHexAddr(s), val: v, label: `Q[${i}]`, kind: 'contiguous', active: opts.ramAccessSlot === s };
+            }
+          });
+        } else if (queueType === 'circular') {
+          circularQ.forEach((v, i) => {
+            const s = 16 + i;
+            if (v !== null) ramSlots[s] = { slot: s, hex: toHexAddr(s), val: v, label: `Q[${i}]`, kind: 'contiguous', active: opts.ramAccessSlot === s };
+          });
+        } else {
+          priorityQ.forEach((val, i) => {
+            const s = 16 + i;
+            ramSlots[s] = { slot: s, hex: toHexAddr(s), val: val, label: `#${i + 1}`, kind: 'contiguous', active: opts.ramAccessSlot === s };
+          });
+        }
+      } else if (currentDS === 'linked') {
+        linkedNodes.forEach((n, i) => {
+          ramSlots[n.ramSlot] = { slot: n.ramSlot, hex: toHexAddr(n.ramSlot), val: n.val, label: i === 0 ? 'HEAD' : 'NODE', kind: 'pointer', active: opts.ramAccessSlot === n.ramSlot };
+        });
+      } else if (currentDS === 'tree') {
+        if (treeType === 'bst' || treeType === 'avl') {
+          const root = treeType === 'bst' ? bstRoot : avlRoot;
+          mapTreeToRAM(root, ramSlots, opts.ramAccessSlot);
+        } else if (treeType === 'heap') {
+          heapArray.forEach((v, i) => {
+            ramSlots[i] = { slot: i, hex: toHexAddr(i), val: v, label: `H[${i}]`, kind: 'contiguous', active: opts.ramAccessSlot === i };
+          });
+        } else if (treeType === 'huffman') {
+          huffmanForest.forEach(tree => mapTreeToRAM(tree, ramSlots, opts.ramAccessSlot));
+        }
+      } else if (currentDS === 'graph') {
+        Object.keys(GRAPH_COORDS).forEach(v => {
+          const s = GRAPH_COORDS[v].ram;
+          ramSlots[s] = { slot: s, hex: toHexAddr(s), val: v, label: `V:${v}`, kind: 'pointer', active: opts.ramAccessSlot === s };
+        });
+      }
+
+      return {
+        ds: currentDS,
+        narration: opts.narration || '',
+        status: opts.status || 'ACTIVE',
+        isError: Boolean(opts.isError),
+        errorTitle: opts.errorTitle || opts.status || 'ERROR',
+        highlightIdx: opts.highlightIdx ?? null,
+        secondaryIdx: opts.secondaryIdx ?? null,
+        foundIdx: opts.foundIdx ?? null,
+        warnIdx: opts.warnIdx ?? null,
+        avlBanner: opts.avlBanner || null,
+        shiftDir: opts.shiftDir || null,
+        animIdx: opts.animIdx ?? null,
+        auxText: opts.auxText || null,
+        graphState: opts.graphState ? JSON.parse(JSON.stringify(opts.graphState)) : null,
+        snapshotData: cloneCurrentDSData(),
+        ramSlots,
+        l1CacheLineStart,
+        hwEvent,
+        hwStats: { ...hwStats },
+        traceSnapshot: [...traceHistory]
+      };
+    }
+
+    function mapTreeToRAM(node, ramSlots, activeSlot) {
+      if (!node) return;
+      const s = node.ramSlot ?? 4;
+      ramSlots[s] = { slot: s, hex: toHexAddr(s), val: node.val, label: 'NODE', kind: 'pointer', active: activeSlot === s };
+      mapTreeToRAM(node.left, ramSlots, activeSlot);
+      mapTreeToRAM(node.right, ramSlots, activeSlot);
+    }
+
+    function cloneCurrentDSData() {
+      return JSON.parse(JSON.stringify({
+        arrayItems,
+        stackItems,
+        queueType, linearQ, linFront, linRear, circularQ, qFront, qRear, qCount, priorityQ,
+        linkedType, linkedNodes,
+        treeType, bstRoot, avlRoot, heapArray, heapSortedCount,
+        huffmanForest, huffmanCodes
+      }));
+    }
+
+    // -------------------------------------------------------------------------
+    // 01 ARRAY OPERATIONS
+    // -------------------------------------------------------------------------
+    function arrayInsertAtPos() {
+      if (arrayItems.length >= ARRAY_CAP) {
+        playFrames([makeFrame({
+          narration: `ARRAY OVERFLOW: Cannot insert ${selectedValue}. Array is already at full capacity (${ARRAY_CAP}/${ARRAY_CAP}).`,
+          status: 'ARRAY OVERFLOW',
+          errorTitle: 'ARRAY OVERFLOW',
+          isError: true
+        })]);
+        return;
+      }
+      const pos = Math.min(selectedIndex, arrayItems.length);
+      const val = selectedValue;
+      const seq = [];
+
+      seq.push(makeFrame({
+        narration: `Preparing to insert ${val} at index [${pos}]. Elements from [${pos}] to [${arrayItems.length - 1}] must shift right.`,
+        status: `INSERT @ [${pos}]`,
+        highlightIdx: pos,
+        ramAccessSlot: pos
+      }));
+
+      arrayItems.push(arrayItems[arrayItems.length - 1]);
+
+      for (let i = arrayItems.length - 2; i >= pos; i--) {
+        arrayItems[i + 1] = arrayItems[i];
+        seq.push(makeFrame({
+          narration: `Shifting ${arrayItems[i]} right from index [${i}] to [${i + 1}] (${toHexAddr(i + 1)}).`,
+          status: `SHIFT [${i}]→[${i + 1}]`,
+          highlightIdx: i + 1,
+          secondaryIdx: i,
+          shiftDir: 'right',
+          ramAccessSlot: i + 1
+        }));
+      }
+
+      arrayItems[pos] = val;
+      seq.push(makeFrame({
+        narration: `Inserted ${val} at index [${pos}] (${toHexAddr(pos)}).`,
+        status: `INSERTED ${val}`,
+        highlightIdx: pos,
+        animIdx: pos,
+        ramAccessSlot: pos
+      }));
+
+      buildControlsForDS();
+      playFrames(seq);
+    }
+
+    function arrayDeleteByValue() {
+      if (arrayItems.length === 0) {
+        playFrames([makeFrame({
+          narration: `ARRAY UNDERFLOW: Cannot delete from an empty array.`,
+          status: 'ARRAY UNDERFLOW',
+          errorTitle: 'ARRAY UNDERFLOW',
+          isError: true
+        })]);
+        return;
+      }
+      const target = selectedTargetVal;
+      const seq = [];
+      let foundIdx = -1;
+
+      for (let i = 0; i < arrayItems.length; i++) {
+        seq.push(makeFrame({
+          narration: `Scanning index [${i}]: checking if ${arrayItems[i]} == ${target}.`,
+          status: `SCAN [${i}]`,
+          highlightIdx: i,
+          ramAccessSlot: i
+        }));
+        if (arrayItems[i] === target) {
+          foundIdx = i;
+          break;
+        }
+      }
+
+      if (foundIdx === -1) {
+        seq.push(makeFrame({
+          narration: `Value Not Found: Scanned all ${arrayItems.length} elements — ${target} is not present in the array.`,
+          status: 'VALUE NOT FOUND',
+          errorTitle: 'VALUE NOT FOUND',
+          isError: true
+        }));
+        playFrames(seq);
+        return;
+      }
+
+      seq.push(makeFrame({
+        narration: `Found ${target} at index [${foundIdx}]. Shifting subsequent elements left to fill the gap.`,
+        status: `FOUND @ [${foundIdx}]`,
+        highlightIdx: foundIdx,
+        ramAccessSlot: foundIdx
+      }));
+
+      for (let i = foundIdx; i < arrayItems.length - 1; i++) {
+        arrayItems[i] = arrayItems[i + 1];
+        seq.push(makeFrame({
+          narration: `Shifting ${arrayItems[i]} left from [${i + 1}] to [${i}] (${toHexAddr(i)}).`,
+          status: `SHIFT [${i + 1}]→[${i}]`,
+          highlightIdx: i,
+          shiftDir: 'left',
+          ramAccessSlot: i
+        }));
+      }
+
+      arrayItems.pop();
+      seq.push(makeFrame({
+        narration: `Deleted ${target}. Array length is now ${arrayItems.length}.`,
+        status: 'DELETED',
+        ramAccessSlot: Math.max(0, foundIdx - 1)
+      }));
+
+      buildControlsForDS();
+      playFrames(seq);
+    }
+
+    // -------------------------------------------------------------------------
+    // 02 STACK OPERATIONS
+    // -------------------------------------------------------------------------
+    function stackPush() {
+      if (stackItems.length >= STACK_CAP) {
+        playFrames([makeFrame({
+          narration: `STACK OVERFLOW: Cannot push ${selectedValue}. Stack capacity (${STACK_CAP}/${STACK_CAP}) is full!`,
+          status: 'STACK OVERFLOW',
+          errorTitle: 'STACK OVERFLOW',
+          isError: true,
+          highlightIdx: stackItems.length - 1
+        })]);
+        return;
+      }
+      const val = selectedValue;
+      stackItems.push(val);
+      const topIdx = stackItems.length - 1;
+
+      playFrames([makeFrame({
+        narration: `Pushed ${val} onto the stack. TOP pointer moved to [${topIdx}] (${toHexAddr(8 + topIdx)}).`,
+        status: `TOP = ${topIdx}`,
+        highlightIdx: topIdx,
+        animIdx: topIdx,
+        ramAccessSlot: 8 + topIdx
+      })]);
+    }
+
+    function stackPop() {
+      if (stackItems.length === 0) {
+        playFrames([makeFrame({
+          narration: `STACK UNDERFLOW: Cannot pop! The stack is completely empty (TOP = -1).`,
+          status: 'STACK UNDERFLOW',
+          errorTitle: 'STACK UNDERFLOW',
+          isError: true
+        })]);
+        return;
+      }
+      const topIdx = stackItems.length - 1;
+      const popped = stackItems[topIdx];
+      const seq = [
+        makeFrame({
+          narration: `Reading top element ${popped} at TOP = [${topIdx}] (${toHexAddr(8 + topIdx)}).`,
+          status: `POP [${topIdx}]`,
+          highlightIdx: topIdx,
+          ramAccessSlot: 8 + topIdx
+        })
+      ];
+
+      stackItems.pop();
+      seq.push(makeFrame({
+        narration: `Popped ${popped}. TOP pointer decremented to ${stackItems.length - 1}.`,
+        status: `POPPED ${popped}`,
+        highlightIdx: stackItems.length - 1,
+        ramAccessSlot: stackItems.length > 0 ? 8 + stackItems.length - 1 : null
+      }));
+
+      playFrames(seq);
+    }
+
+    function stackPeek() {
+      if (stackItems.length === 0) {
+        playFrames([makeFrame({
+          narration: `STACK UNDERFLOW: Cannot peek! Stack is empty (TOP = -1).`,
+          status: 'STACK UNDERFLOW',
+          errorTitle: 'STACK UNDERFLOW',
+          isError: true
+        })]);
+        return;
+      }
+      const topIdx = stackItems.length - 1;
+      const topVal = stackItems[topIdx];
+      playFrames([makeFrame({
+        narration: `Peeked at TOP [${topIdx}] (${toHexAddr(8 + topIdx)}): value is ${topVal}.`,
+        status: `PEEK = ${topVal}`,
+        highlightIdx: topIdx,
+        ramAccessSlot: 8 + topIdx
+      })]);
+    }
+
+    function stackIsEmpty() {
+      const empty = stackItems.length === 0;
+      playFrames([makeFrame({
+        narration: `isEmpty() check: (TOP == -1) is ${empty ? 'TRUE (Stack is empty)' : 'FALSE (' + stackItems.length + ' elements in stack)'}.`,
+        status: `isEmpty = ${empty}`,
+        highlightIdx: stackItems.length - 1
+      })]);
+    }
+
+    function stackIsFull() {
+      const full = stackItems.length >= STACK_CAP;
+      playFrames([makeFrame({
+        narration: `isFull() check: (TOP == ${STACK_CAP - 1}) is ${full ? 'TRUE (Stack is full)' : 'FALSE (' + (STACK_CAP - stackItems.length) + ' free slots remaining)'}.`,
+        status: `isFull = ${full}`,
+        highlightIdx: stackItems.length - 1
+      })]);
+    }
+
+    // -------------------------------------------------------------------------
+    // 03 QUEUE OPERATIONS (LINEAR DEFAULT, CIRCULAR, MAX-PRIORITY QUEUE)
+    // -------------------------------------------------------------------------
+    function queueEnqueue() {
+      if (queueType === 'linear') {
+        if (linRear >= LINEAR_Q_CAP - 1) {
+          const wasted = linFront > 0 ? ` (${linFront} vacated front slot(s) cannot be reused in a Linear Queue!)` : '';
+          playFrames([makeFrame({
+            narration: `QUEUE OVERFLOW: REAR (${linRear}) reached end of array [${LINEAR_Q_CAP - 1}]${wasted}`,
+            status: 'QUEUE OVERFLOW',
+            errorTitle: 'QUEUE OVERFLOW',
+            isError: true,
+            highlightIdx: linRear
+          })]);
+          return;
+        }
+        if (linFront > linRear) {
+          linFront = 0;
+          linRear = 0;
+        } else {
+          linRear++;
+        }
+        linearQ[linRear] = selectedValue;
+        playFrames([makeFrame({
+          narration: `Enqueued ${selectedValue} at REAR [${linRear}] (${toHexAddr(16 + linRear)}). FRONT=${linFront}, REAR=${linRear}.`,
+          status: `REAR = ${linRear}`,
+          highlightIdx: linRear,
+          animIdx: linRear,
+          ramAccessSlot: 16 + linRear
+        })]);
+      }
+      else if (queueType === 'circular') {
+        if (qCount >= 8) {
+          playFrames([makeFrame({
+            narration: `QUEUE OVERFLOW: Circular Queue is full (8/8 slots occupied).`,
+            status: 'QUEUE OVERFLOW',
+            errorTitle: 'QUEUE OVERFLOW',
+            isError: true
+          })]);
+          return;
+        }
+        const writeSlot = qRear;
+        circularQ[writeSlot] = selectedValue;
+        qRear = (qRear + 1) % 8;
+        qCount++;
+
+        playFrames([makeFrame({
+          narration: `Enqueued ${selectedValue} at REAR [${writeSlot}] (${toHexAddr(16 + writeSlot)}). Circular wrap: REAR = (${writeSlot} + 1) % 8 = ${qRear}.`,
+          status: `REAR → ${qRear}`,
+          highlightIdx: writeSlot,
+          animIdx: writeSlot,
+          ramAccessSlot: 16 + writeSlot
+        })]);
+      }
+      else {
+        // Max-Priority Queue: Value = Priority, strictly unique, descending order
+        if (priorityQ.length >= PRIO_Q_CAP) {
+          playFrames([makeFrame({
+            narration: `PRIORITY QUEUE OVERFLOW: Maximum capacity (${PRIO_Q_CAP}/${PRIO_Q_CAP}) reached!`,
+            status: 'QUEUE OVERFLOW',
+            errorTitle: 'QUEUE OVERFLOW',
+            isError: true
+          })]);
+          return;
+        }
+        const val = selectedValue;
+        if (priorityQ.includes(val)) {
+          playFrames([makeFrame({
+            narration: `DUPLICATE PRIORITY REJECTED: Priority ${val} already exists in the queue. Priorities must be unique.`,
+            status: 'DUPLICATE PRIORITY',
+            errorTitle: 'DUPLICATE PRIORITY',
+            isError: true,
+            highlightIdx: priorityQ.indexOf(val)
+          })]);
+          return;
+        }
+
+        const seq = [];
+        let insIdx = priorityQ.length;
+
+        // Step 1: Scan from HEAD (Rank #1) to find where val > priorityQ[i]
+        for (let i = 0; i < priorityQ.length; i++) {
+          const curr = priorityQ[i];
+          const higher = val > curr;
+          seq.push(makeFrame({
+            narration: `Comparing Priority(${val}) vs Rank #${i + 1} (${curr}) at ${toHexAddr(16 + i)} → ${
+              higher ? `${val} > ${curr}: Higher priority! Insert at [${i}].` : `${val} < ${curr}: Keep scanning right.`
+            }`,
+            status: `CMP ${val} vs ${curr}`,
+            highlightIdx: i,
+            ramAccessSlot: 16 + i
+          }));
+          if (higher) {
+            insIdx = i;
+            break;
+          }
+        }
+
+        // Step 2: Shift lower-priority elements right one-by-one in RAM
+        priorityQ.push(priorityQ[priorityQ.length - 1]);
+        for (let j = priorityQ.length - 2; j >= insIdx; j--) {
+          priorityQ[j + 1] = priorityQ[j];
+          seq.push(makeFrame({
+            narration: `Shifting lower-priority value ${priorityQ[j]} right from Rank #${j + 1} to Rank #${j + 2} (${toHexAddr(16 + j + 1)}).`,
+            status: `SHIFT [${j}]→[${j + 1}]`,
+            highlightIdx: j + 1,
+            secondaryIdx: j,
+            shiftDir: 'right',
+            ramAccessSlot: 16 + j + 1
+          }));
+        }
+
+        // Step 3: Place new value at its sorted rank
+        priorityQ[insIdx] = val;
+        seq.push(makeFrame({
+          narration: `Enqueued ${val} at Rank #${insIdx + 1} (index [${insIdx}], ${toHexAddr(16 + insIdx)}). Larger value = Higher priority.`,
+          status: `INSERTED RANK #${insIdx + 1}`,
+          highlightIdx: insIdx,
+          animIdx: insIdx,
+          ramAccessSlot: 16 + insIdx
+        }));
+
+        buildControlsForDS();
+        playFrames(seq);
+      }
+    }
+
+    function queueDequeue() {
+      if (queueType === 'linear') {
+        if (linFront > linRear || linearQ[linFront] === null) {
+          playFrames([makeFrame({
+            narration: `QUEUE UNDERFLOW: Cannot dequeue! Linear Queue is empty (FRONT > REAR).`,
+            status: 'QUEUE UNDERFLOW',
+            errorTitle: 'QUEUE UNDERFLOW',
+            isError: true
+          })]);
+          return;
+        }
+        const removedVal = linearQ[linFront];
+        const oldFront = linFront;
+        linearQ[oldFront] = null;
+        linFront++;
+
+        playFrames([makeFrame({
+          narration: `Dequeued ${removedVal} from FRONT [${oldFront}]. FRONT incremented to ${linFront}. Slot [${oldFront}] is now vacated.`,
+          status: `FRONT → ${linFront}`,
+          highlightIdx: oldFront,
+          ramAccessSlot: 16 + oldFront
+        })]);
+      }
+      else if (queueType === 'circular') {
+        if (qCount === 0) {
+          playFrames([makeFrame({
+            narration: `QUEUE UNDERFLOW: Circular Queue is empty (Count = 0).`,
+            status: 'QUEUE UNDERFLOW',
+            errorTitle: 'QUEUE UNDERFLOW',
+            isError: true
+          })]);
+          return;
+        }
+        const removedVal = circularQ[qFront];
+        const oldFront = qFront;
+        circularQ[oldFront] = null;
+        qFront = (qFront + 1) % 8;
+        qCount--;
+
+        playFrames([makeFrame({
+          narration: `Dequeued ${removedVal} from FRONT [${oldFront}]. Circular advance: FRONT = (${oldFront} + 1) % 8 = ${qFront}.`,
+          status: `FRONT → ${qFront}`,
+          highlightIdx: qFront,
+          ramAccessSlot: 16 + oldFront
+        })]);
+      }
+      else {
+        if (priorityQ.length === 0) {
+          playFrames([makeFrame({
+            narration: `PRIORITY QUEUE UNDERFLOW: Priority Queue is empty!`,
+            status: 'QUEUE UNDERFLOW',
+            errorTitle: 'QUEUE UNDERFLOW',
+            isError: true
+          })]);
+          return;
+        }
+        const maxVal = priorityQ[0];
+        const seq = [
+          makeFrame({
+            narration: `Inspecting HEAD (Rank #1 MAX) at ${toHexAddr(16)}: highest-priority element is ${maxVal}.`,
+            status: `DEQUEUE MAX (${maxVal})`,
+            highlightIdx: 0,
+            ramAccessSlot: 16
+          })
+        ];
+
+        priorityQ.shift();
+        const nextMax = priorityQ.length > 0 ? priorityQ[0] : 'None';
+        seq.push(makeFrame({
+          narration: `Dequeued highest-priority element ${maxVal}. Next highest priority at HEAD is ${nextMax}.`,
+          status: `DEQUEUED ${maxVal}`,
+          highlightIdx: 0,
+          shiftDir: 'left',
+          ramAccessSlot: priorityQ.length > 0 ? 16 : null
+        }));
+
+        buildControlsForDS();
+        playFrames(seq);
+      }
+    }
+
+    function queueIsEmpty() {
+      const empty = queueType === 'linear' ? (linFront > linRear) : (queueType === 'circular' ? qCount === 0 : priorityQ.length === 0);
+      playFrames([makeFrame({
+        narration: `isEmpty() check: Queue is ${empty ? 'EMPTY (TRUE)' : 'NOT EMPTY (FALSE)'}.`,
+        status: `isEmpty = ${empty}`
+      })]);
+    }
+
+    function queueIsFull() {
+      const full = queueType === 'linear' ? (linRear >= LINEAR_Q_CAP - 1) : (queueType === 'circular' ? qCount >= 8 : priorityQ.length >= PRIO_Q_CAP);
+      playFrames([makeFrame({
+        narration: `isFull() check: ${full ? 'TRUE (Queue cannot accept more elements)' : 'FALSE (Space available)'}.`,
+        status: `isFull = ${full}`
+      })]);
+    }
+
+    // -------------------------------------------------------------------------
+    // 04 LINKED LIST OPERATIONS (SEPARATE FORWARD & BACKWARD TRAVERSAL)
+    // -------------------------------------------------------------------------
+    function pickFreeScatteredSlot() {
+      const used = new Set(linkedNodes.map(n => n.ramSlot));
+      const candidates = [4, 29, 11, 22, 17, 30, 1, 25, 7, 19, 13, 31];
+      for (const c of candidates) if (!used.has(c)) return c;
+      for (let i = 0; i < 32; i++) if (!used.has(i)) return i;
+      return 0;
+    }
+
+    function llInsertBeg() {
+      if (linkedNodes.length >= 7) {
+        playFrames([makeFrame({
+          narration: `LIST OVERFLOW: Maximum visual node limit (7) reached.`,
+          status: 'LIST OVERFLOW',
+          errorTitle: 'LIST OVERFLOW',
+          isError: true
+        })]);
+        return;
+      }
+      const slot = pickFreeScatteredSlot();
+      linkedNodes.unshift({ id: nextNodeId++, val: selectedValue, ramSlot: slot });
+      buildControlsForDS();
+      playFrames([makeFrame({
+        narration: `Inserted ${selectedValue} at Beginning. Allocated node at RAM address ${toHexAddr(slot)} and updated HEAD.`,
+        status: `HEAD → ${toHexAddr(slot)}`,
+        highlightIdx: 0,
+        animIdx: 0,
+        ramAccessSlot: slot
+      })]);
+    }
+
+    function llInsertEnd() {
+      if (linkedNodes.length >= 7) {
+        playFrames([makeFrame({
+          narration: `LIST OVERFLOW: Maximum visual node limit (7) reached.`,
+          status: 'LIST OVERFLOW',
+          errorTitle: 'LIST OVERFLOW',
+          isError: true
+        })]);
+        return;
+      }
+      const seq = [];
+      linkedNodes.forEach((n, i) => {
+        seq.push(makeFrame({
+          narration: `Following next pointer [${i}]: visiting node (${n.val}) at ${toHexAddr(n.ramSlot)}.`,
+          status: `VISIT ${toHexAddr(n.ramSlot)}`,
+          highlightIdx: i,
+          ramAccessSlot: n.ramSlot
+        }));
+      });
+      const slot = pickFreeScatteredSlot();
+      linkedNodes.push({ id: nextNodeId++, val: selectedValue, ramSlot: slot });
+      seq.push(makeFrame({
+        narration: `Inserted ${selectedValue} at End. Allocated node at ${toHexAddr(slot)} and linked from previous tail.`,
+        status: `TAIL → ${toHexAddr(slot)}`,
+        highlightIdx: linkedNodes.length - 1,
+        animIdx: linkedNodes.length - 1,
+        ramAccessSlot: slot
+      }));
+      buildControlsForDS();
+      playFrames(seq);
+    }
+
+    function llInsertBefore() {
+      const idx = linkedNodes.findIndex(n => n.val === selectedTargetVal);
+      if (idx === -1) {
+        playFrames([makeFrame({
+          narration: `TARGET NOT FOUND: Node ${selectedTargetVal} does not exist in the list.`,
+          status: 'NOT FOUND',
+          errorTitle: 'NOT FOUND',
+          isError: true
+        })]);
+        return;
+      }
+      const seq = [];
+      for (let i = 0; i <= idx; i++) {
+        seq.push(makeFrame({
+          narration: `Searching for ${selectedTargetVal}: inspecting node (${linkedNodes[i].val}) at ${toHexAddr(linkedNodes[i].ramSlot)}.`,
+          status: `SCAN ${toHexAddr(linkedNodes[i].ramSlot)}`,
+          highlightIdx: i,
+          ramAccessSlot: linkedNodes[i].ramSlot
+        }));
+      }
+      const slot = pickFreeScatteredSlot();
+      linkedNodes.splice(idx, 0, { id: nextNodeId++, val: selectedValue, ramSlot: slot });
+      seq.push(makeFrame({
+        narration: `Inserted ${selectedValue} (${toHexAddr(slot)}) before ${selectedTargetVal} and updated pointers.`,
+        status: `INSERTED @ [${idx}]`,
+        highlightIdx: idx,
+        animIdx: idx,
+        ramAccessSlot: slot
+      }));
+      buildControlsForDS();
+      playFrames(seq);
+    }
+
+    function llInsertAfter() {
+      const idx = linkedNodes.findIndex(n => n.val === selectedTargetVal);
+      if (idx === -1) {
+        playFrames([makeFrame({
+          narration: `TARGET NOT FOUND: Node ${selectedTargetVal} does not exist in the list.`,
+          status: 'NOT FOUND',
+          errorTitle: 'NOT FOUND',
+          isError: true
+        })]);
+        return;
+      }
+      const seq = [];
+      for (let i = 0; i <= idx; i++) {
+        seq.push(makeFrame({
+          narration: `Searching for ${selectedTargetVal}: visiting node (${linkedNodes[i].val}) at ${toHexAddr(linkedNodes[i].ramSlot)}.`,
+          status: `SCAN ${toHexAddr(linkedNodes[i].ramSlot)}`,
+          highlightIdx: i,
+          ramAccessSlot: linkedNodes[i].ramSlot
+        }));
+      }
+      const slot = pickFreeScatteredSlot();
+      linkedNodes.splice(idx + 1, 0, { id: nextNodeId++, val: selectedValue, ramSlot: slot });
+      seq.push(makeFrame({
+        narration: `Inserted ${selectedValue} (${toHexAddr(slot)}) after ${selectedTargetVal}.`,
+        status: `INSERTED @ [${idx + 1}]`,
+        highlightIdx: idx + 1,
+        animIdx: idx + 1,
+        ramAccessSlot: slot
+      }));
+      buildControlsForDS();
+      playFrames(seq);
+    }
+
+    function llDeleteBeg() {
+      if (linkedNodes.length === 0) {
+        playFrames([makeFrame({
+          narration: `LIST UNDERFLOW: Cannot delete from an empty linked list (HEAD == NULL).`,
+          status: 'LIST UNDERFLOW',
+          errorTitle: 'LIST UNDERFLOW',
+          isError: true
+        })]);
+        return;
+      }
+      const removed = linkedNodes.shift();
+      buildControlsForDS();
+      playFrames([makeFrame({
+        narration: `Deleted beginning node (${removed.val}) at ${toHexAddr(removed.ramSlot)} and advanced HEAD.`,
+        status: `FREED ${toHexAddr(removed.ramSlot)}`,
+        highlightIdx: 0,
+        ramAccessSlot: linkedNodes[0]?.ramSlot
+      })]);
+    }
+
+    function llDeleteEnd() {
+      if (linkedNodes.length === 0) {
+        playFrames([makeFrame({
+          narration: `LIST UNDERFLOW: Cannot delete from an empty linked list (HEAD == NULL).`,
+          status: 'LIST UNDERFLOW',
+          errorTitle: 'LIST UNDERFLOW',
+          isError: true
+        })]);
+        return;
+      }
+      const removed = linkedNodes.pop();
+      buildControlsForDS();
+      playFrames([makeFrame({
+        narration: `Deleted tail node (${removed.val}) at ${toHexAddr(removed.ramSlot)}.`,
+        status: `FREED ${toHexAddr(removed.ramSlot)}`,
+        highlightIdx: linkedNodes.length - 1,
+        ramAccessSlot: linkedNodes[linkedNodes.length - 1]?.ramSlot
+      })]);
+    }
+
+    function llDeleteByVal() {
+      if (linkedNodes.length === 0) {
+        playFrames([makeFrame({
+          narration: `LIST UNDERFLOW: Linked list is empty.`,
+          status: 'LIST UNDERFLOW',
+          errorTitle: 'LIST UNDERFLOW',
+          isError: true
+        })]);
+        return;
+      }
+      const idx = linkedNodes.findIndex(n => n.val === selectedTargetVal);
+      if (idx === -1) {
+        playFrames([makeFrame({
+          narration: `VALUE NOT FOUND: ${selectedTargetVal} is not in the list.`,
+          status: 'NOT FOUND',
+          errorTitle: 'NOT FOUND',
+          isError: true
+        })]);
+        return;
+      }
+      const removed = linkedNodes.splice(idx, 1)[0];
+      buildControlsForDS();
+      playFrames([makeFrame({
+        narration: `Deleted node (${removed.val}) and freed RAM slot ${toHexAddr(removed.ramSlot)}.`,
+        status: `FREED ${toHexAddr(removed.ramSlot)}`,
+        highlightIdx: Math.min(idx, linkedNodes.length - 1)
+      })]);
+    }
+
+    function llDeleteAfter() {
+      const idx = linkedNodes.findIndex(n => n.val === selectedTargetVal);
+      if (idx === -1 || idx >= linkedNodes.length - 1) {
+        playFrames([makeFrame({
+          narration: `NULL POINTER ERROR: No node exists after ${selectedTargetVal} to delete!`,
+          status: 'NO SUCCESSOR',
+          errorTitle: 'NULL POINTER ERROR',
+          isError: true
+        })]);
+        return;
+      }
+      const removed = linkedNodes.splice(idx + 1, 1)[0];
+      buildControlsForDS();
+      playFrames([makeFrame({
+        narration: `Deleted node (${removed.val}) after ${selectedTargetVal} at ${toHexAddr(removed.ramSlot)}.`,
+        status: `FREED ${toHexAddr(removed.ramSlot)}`,
+        highlightIdx: idx
+      })]);
+    }
+
+    function llTraverseForward() {
+      if (linkedNodes.length === 0) {
+        playFrames([makeFrame({
+          narration: `LIST EMPTY: Cannot traverse an empty list.`,
+          status: 'EMPTY LIST',
+          errorTitle: 'EMPTY LIST',
+          isError: true
+        })]);
+        return;
+      }
+      const seq = [];
+      const visited = [];
+      for (let i = 0; i < linkedNodes.length; i++) {
+        visited.push(linkedNodes[i].val);
+        seq.push(makeFrame({
+          narration: `Forward Traversal [${i}]: Visiting node (${linkedNodes[i].val}) at ${toHexAddr(linkedNodes[i].ramSlot)} via NEXT pointer.`,
+          status: `NEXT → ${toHexAddr(linkedNodes[i].ramSlot)}`,
+          highlightIdx: i,
+          auxText: `Forward (Head → Tail): [ ${visited.join(' → ')} ]`,
+          ramAccessSlot: linkedNodes[i].ramSlot
+        }));
+      }
+      playFrames(seq);
+    }
+
+    function llTraverseBackward() {
+      if (linkedNodes.length === 0) {
+        playFrames([makeFrame({
+          narration: `LIST EMPTY: Cannot traverse an empty list.`,
+          status: 'EMPTY LIST',
+          errorTitle: 'EMPTY LIST',
+          isError: true
+        })]);
+        return;
+      }
+      const seq = [];
+      const visited = [];
+      for (let i = linkedNodes.length - 1; i >= 0; i--) {
+        visited.push(linkedNodes[i].val);
+        seq.push(makeFrame({
+          narration: `Backward Traversal [${i}]: Visiting node (${linkedNodes[i].val}) at ${toHexAddr(linkedNodes[i].ramSlot)} via PREV pointer.`,
+          status: `PREV ← ${toHexAddr(linkedNodes[i].ramSlot)}`,
+          highlightIdx: i,
+          auxText: `Backward (Tail → Head): [ ${visited.join(' ← ')} ]`,
+          ramAccessSlot: linkedNodes[i].ramSlot
+        }));
+      }
+      playFrames(seq);
+    }
+
+    // -------------------------------------------------------------------------
+    // 05 TREE OPERATIONS (BST, AVL WITH INSERT & ROTATIONS, HEAP, HUFFMAN)
+    // -------------------------------------------------------------------------
+    function bstInsert() {
+      const val = selectedValue;
+      const seq = [];
+      const freeSlot = Math.floor(Math.random() * 28) + 2;
+
+      function insertRec(node) {
+        if (!node) return { val, ramSlot: freeSlot, left: null, right: null };
+        seq.push(makeFrame({
+          narration: `Comparing ${val} with node (${node.val}) at ${toHexAddr(node.ramSlot)} → go ${val < node.val ? 'LEFT' : 'RIGHT'}.`,
+          status: `CMP ${val} vs ${node.val}`,
+          highlightIdx: node.val,
+          ramAccessSlot: node.ramSlot
+        }));
+        if (val < node.val) node.left = insertRec(node.left);
+        else if (val > node.val) node.right = insertRec(node.right);
+        return node;
+      }
+
+      bstRoot = insertRec(bstRoot);
+      seq.push(makeFrame({
+        narration: `Inserted ${val} into BST at RAM address ${toHexAddr(freeSlot)}.`,
+        status: `INSERTED ${val}`,
+        highlightIdx: val,
+        ramAccessSlot: freeSlot
+      }));
+      buildControlsForDS();
+      playFrames(seq);
+    }
+
+    function bstDeleteCasePreset(targetVal) {
+      initDefaultTrees();
+      selectedTargetVal = targetVal;
+      bstDelete(targetVal);
+    }
+
+    function bstDelete(val) {
+      if (!bstRoot) {
+        playFrames([makeFrame({
+          narration: `TREE UNDERFLOW: Cannot delete ${val}. The BST is empty (ROOT == NULL).`,
+          status: 'EMPTY TREE',
+          errorTitle: 'TREE UNDERFLOW',
+          isError: true
+        })]);
+        return;
+      }
+
+      const seq = [];
+      let found = false;
+
+      // Search path trace
+      let curr = bstRoot;
+      while (curr) {
+        seq.push(makeFrame({
+          narration: `Searching for ${val}: inspecting node (${curr.val}) at ${toHexAddr(curr.ramSlot)}.`,
+          status: `SCAN ${curr.val}`,
+          highlightIdx: curr.val,
+          ramAccessSlot: curr.ramSlot
+        }));
+        if (val === curr.val) {
+          found = true;
+          break;
+        }
+        curr = val < curr.val ? curr.left : curr.right;
+      }
+
+      if (!found) {
+        seq.push(makeFrame({
+          narration: `VALUE NOT FOUND: Node ${val} does not exist in the Binary Search Tree.`,
+          status: 'NOT FOUND',
+          errorTitle: 'VALUE NOT FOUND',
+          isError: true
+        }));
+        playFrames(seq);
+        return;
+      }
+
+      function deleteNode(node, key) {
+        if (!node) return null;
+        if (key < node.val) {
+          node.left = deleteNode(node.left, key);
+          return node;
+        } else if (key > node.val) {
+          node.right = deleteNode(node.right, key);
+          return node;
+        } else {
+          // Node found! Handle the 3 BST Deletion Cases:
+          // Case 1: Leaf Node
+          if (!node.left && !node.right) {
+            seq.push(makeFrame({
+              narration: `Case 1 (Leaf Node): Target (${node.val}) has no children. Removing leaf and freeing ${toHexAddr(node.ramSlot)}.`,
+              status: `CASE 1: LEAF`,
+              warnIdx: node.val,
+              ramAccessSlot: node.ramSlot
+            }));
+            return null;
+          }
+          // Case 2: Single Child
+          if (!node.left || !node.right) {
+            const child = node.left || node.right;
+            seq.push(makeFrame({
+              narration: `Case 2 (One Child): Target (${node.val}) has a single child (${child.val}). Splicing (${child.val}) directly to parent.`,
+              status: `CASE 2: 1-CHILD`,
+              warnIdx: node.val,
+              secondaryIdx: child.val,
+              ramAccessSlot: child.ramSlot
+            }));
+            return child;
+          }
+          // Case 3: Two Children (Find Inorder Successor = minimum in right subtree)
+          let succ = node.right;
+          while (succ.left) {
+            seq.push(makeFrame({
+              narration: `Case 3 (Two Children): Traversing left in right subtree (${succ.val}) to find minimum Inorder Successor.`,
+              status: `FIND SUCCESSOR`,
+              warnIdx: node.val,
+              highlightIdx: succ.val,
+              ramAccessSlot: succ.ramSlot
+            }));
+            succ = succ.left;
+          }
+          seq.push(makeFrame({
+            narration: `Case 3: Found Inorder Successor (${succ.val}) at ${toHexAddr(succ.ramSlot)}. Copying ${succ.val} into target node (${node.val}).`,
+            status: `SUCCESSOR = ${succ.val}`,
+            warnIdx: node.val,
+            foundIdx: succ.val,
+            ramAccessSlot: succ.ramSlot
+          }));
+          const succVal = succ.val;
+          node.right = deleteNode(node.right, succVal);
+          node.val = succVal;
+          return node;
+        }
+      }
+
+      bstRoot = deleteNode(bstRoot, val);
+
+      seq.push(makeFrame({
+        narration: `BST Deletion of ${val} complete. Binary Search Tree property preserved.`,
+        status: `DELETED ${val}`,
+        ramAccessSlot: bstRoot ? bstRoot.ramSlot : null
+      }));
+
+      buildControlsForDS();
+      playFrames(seq);
+    }
+
+    // AVL Interactive Insert with Step-by-Step Animated Rotations
+    function avlRotateRight(y) {
+      const x = y.left;
+      const T2 = x.right;
+      x.right = y;
+      y.left = T2;
+      return x;
+    }
+
+    function avlRotateLeft(x) {
+      const y = x.right;
+      const T2 = y.left;
+      y.left = x;
+      x.right = T2;
+      return y;
+    }
+
+    function findDeepestUnbalanced(node, parent = null, side = null) {
+      if (!node) return null;
+      const leftRes = findDeepestUnbalanced(node.left, node, 'left');
+      if (leftRes) return leftRes;
+      const rightRes = findDeepestUnbalanced(node.right, node, 'right');
+      if (rightRes) return rightRes;
+      if (Math.abs(node.bfVal) > 1) {
+        return { node, parent, side };
+      }
+      return null;
+    }
+
+    function replaceAvlSubtree(parent, side, newSubRoot) {
+      if (!parent) {
+        avlRoot = newSubRoot;
+      } else if (side === 'left') {
+        parent.left = newSubRoot;
+      } else {
+        parent.right = newSubRoot;
+      }
+      updateAvlBF(avlRoot);
+    }
+
+    function avlInsertValue() {
+      const val = selectedValue;
+      const existing = [];
+      collectTreeValues(avlRoot, existing);
+      if (existing.includes(val)) {
+        playFrames([makeFrame({
+          narration: `DUPLICATE KEY: ${val} is already in the AVL Tree. Pick another value.`,
+          status: 'DUPLICATE KEY',
+          errorTitle: 'DUPLICATE KEY',
+          isError: true,
+          highlightIdx: val
+        })]);
+        return;
+      }
+
+      const seq = [];
+      const freeSlot = Math.floor(Math.random() * 28) + 2;
+
+      function insertStandard(node, key) {
+        if (!node) return { val: key, ramSlot: freeSlot, bf: '0', bfVal: 0, left: null, right: null };
+        seq.push(makeFrame({
+          narration: `BST Search Step: Comparing ${key} with node ${node.val} (${toHexAddr(node.ramSlot)}) → go ${key < node.val ? 'LEFT' : 'RIGHT'}.`,
+          status: `CMP ${key} vs ${node.val}`,
+          highlightIdx: node.val,
+          ramAccessSlot: node.ramSlot
+        }));
+        if (key < node.val) node.left = insertStandard(node.left, key);
+        else if (key > node.val) node.right = insertStandard(node.right, key);
+        return node;
+      }
+
+      // Step 1: Insert leaf and render the tree before any rotation
+      avlRoot = insertStandard(avlRoot, val);
+      updateAvlBF(avlRoot);
+
+      seq.push(makeFrame({
+        narration: `Step 1: Inserted leaf node ${val} at ${toHexAddr(freeSlot)}. Recomputing heights and Balance Factors (BF = H_left - H_right).`,
+        status: `INSERTED ${val}`,
+        highlightIdx: val,
+        ramAccessSlot: freeSlot
+      }));
+
+      // Step 2: Check for lowest unbalanced ancestor
+      const unbal = findDeepestUnbalanced(avlRoot);
+      if (unbal) {
+        const z = unbal.node;
+        let rotCase = '';
+        if (z.bfVal > 1) {
+          rotCase = (z.left && z.left.bfVal >= 0) ? 'LL' : 'LR';
+        } else {
+          rotCase = (z.right && z.right.bfVal <= 0) ? 'RR' : 'RL';
+        }
+
+        const caseDescriptions = {
+          'LL': `Imbalance Detected at Node ${z.val} (BF = ${z.bf}) → Performing LL (Right) Rotation around ${z.val}`,
+          'RR': `Imbalance Detected at Node ${z.val} (BF = ${z.bf}) → Performing RR (Left) Rotation around ${z.val}`,
+          'LR': `Imbalance Detected at Node ${z.val} (BF = ${z.bf}) → Performing LR (Left-Right) Double Rotation`,
+          'RL': `Imbalance Detected at Node ${z.val} (BF = ${z.bf}) → Performing RL (Right-Left) Double Rotation`
+        };
+
+        const childNode = z.bfVal > 1 ? z.left : z.right;
+
+        // Show unbalanced state clearly with warning highlight & rotation banner
+        seq.push(makeFrame({
+          narration: `Step 2: ${caseDescriptions[rotCase]}. Pausing on unbalanced state before rotating.`,
+          status: `IMBALANCE: ${rotCase} CASE`,
+          warnIdx: z.val,
+          secondaryIdx: childNode ? childNode.val : null,
+          avlBanner: { type: 'warn', text: caseDescriptions[rotCase] },
+          ramAccessSlot: z.ramSlot
+        }));
+
+        // Step 3: If Double Rotation (LR or RL), animate intermediate child rotation first
+        if (rotCase === 'LR') {
+          const leftChildVal = z.left.val;
+          z.left = avlRotateLeft(z.left);
+          updateAvlBF(avlRoot);
+
+          seq.push(makeFrame({
+            narration: `Step 3 (LR Intermediate): Left-Rotated left child (${leftChildVal}). Subtree is now aligned in LL form (${z.val} → ${z.left.val}). Next: Right-Rotate ${z.val}.`,
+            status: `LR STEP 1: ROT_L(${leftChildVal})`,
+            warnIdx: z.val,
+            highlightIdx: z.left.val,
+            avlBanner: { type: 'info', text: `LR Step 1 Complete: Left-Rotated ${leftChildVal} → Now performing Right Rotation on ${z.val}` },
+            ramAccessSlot: z.left.ramSlot
+          }));
+
+          const newSubRoot = avlRotateRight(z);
+          replaceAvlSubtree(unbal.parent, unbal.side, newSubRoot);
+
+          seq.push(makeFrame({
+            narration: `Step 4: Right-Rotated ${z.val}. LR Double Rotation complete! Subtree root is now ${newSubRoot.val} (BF = ${newSubRoot.bf}).`,
+            status: `LR BALANCED (ROOT=${newSubRoot.val})`,
+            foundIdx: newSubRoot.val,
+            avlBanner: { type: 'ok', text: `LR Double Rotation Complete — Subtree Balanced at Node ${newSubRoot.val} (BF = 0)` },
+            ramAccessSlot: newSubRoot.ramSlot
+          }));
+        }
+        else if (rotCase === 'RL') {
+          const rightChildVal = z.right.val;
+          z.right = avlRotateRight(z.right);
+          updateAvlBF(avlRoot);
+
+          seq.push(makeFrame({
+            narration: `Step 3 (RL Intermediate): Right-Rotated right child (${rightChildVal}). Subtree is now aligned in RR form (${z.val} → ${z.right.val}). Next: Left-Rotate ${z.val}.`,
+            status: `RL STEP 1: ROT_R(${rightChildVal})`,
+            warnIdx: z.val,
+            highlightIdx: z.right.val,
+            avlBanner: { type: 'info', text: `RL Step 1 Complete: Right-Rotated ${rightChildVal} → Now performing Left Rotation on ${z.val}` },
+            ramAccessSlot: z.right.ramSlot
+          }));
+
+          const newSubRoot = avlRotateLeft(z);
+          replaceAvlSubtree(unbal.parent, unbal.side, newSubRoot);
+
+          seq.push(makeFrame({
+            narration: `Step 4: Left-Rotated ${z.val}. RL Double Rotation complete! Subtree root is now ${newSubRoot.val} (BF = ${newSubRoot.bf}).`,
+            status: `RL BALANCED (ROOT=${newSubRoot.val})`,
+            foundIdx: newSubRoot.val,
+            avlBanner: { type: 'ok', text: `RL Double Rotation Complete — Subtree Balanced at Node ${newSubRoot.val} (BF = 0)` },
+            ramAccessSlot: newSubRoot.ramSlot
+          }));
+        }
+        else if (rotCase === 'LL') {
+          const newSubRoot = avlRotateRight(z);
+          replaceAvlSubtree(unbal.parent, unbal.side, newSubRoot);
+
+          seq.push(makeFrame({
+            narration: `Step 3: Right-Rotated unbalanced node ${z.val} around pivot ${newSubRoot.val}. Tree is now balanced (BF = ${newSubRoot.bf}).`,
+            status: `LL BALANCED (ROOT=${newSubRoot.val})`,
+            foundIdx: newSubRoot.val,
+            avlBanner: { type: 'ok', text: `LL (Right) Rotation Complete — Balanced around Node ${newSubRoot.val} (BF = 0)` },
+            ramAccessSlot: newSubRoot.ramSlot
+          }));
+        }
+        else if (rotCase === 'RR') {
+          const newSubRoot = avlRotateLeft(z);
+          replaceAvlSubtree(unbal.parent, unbal.side, newSubRoot);
+
+          seq.push(makeFrame({
+            narration: `Step 3: Left-Rotated unbalanced node ${z.val} around pivot ${newSubRoot.val}. Tree is now balanced (BF = ${newSubRoot.bf}).`,
+            status: `RR BALANCED (ROOT=${newSubRoot.val})`,
+            foundIdx: newSubRoot.val,
+            avlBanner: { type: 'ok', text: `RR (Left) Rotation Complete — Balanced around Node ${newSubRoot.val} (BF = 0)` },
+            ramAccessSlot: newSubRoot.ramSlot
+          }));
+        }
+      } else {
+        seq.push(makeFrame({
+          narration: `Tree remains balanced (all nodes have BF ∈ {-1, 0, +1}). No rotation needed.`,
+          status: `BALANCED`,
+          foundIdx: val,
+          avlBanner: { type: 'ok', text: `All Balance Factors within {-1, 0, +1} — No Rotation Required` }
+        }));
+      }
+
+      buildControlsForDS();
+      playFrames(seq);
+    }
+
+    function runTreeTraversal(order) {
+      const root = treeType === 'bst' ? bstRoot : avlRoot;
+      if (!root) {
+        playFrames([makeFrame({
+          narration: `TREE EMPTY: Nothing to traverse.`,
+          status: 'EMPTY TREE',
+          errorTitle: 'EMPTY TREE',
+          isError: true
+        })]);
+        return;
+      }
+      const visited = [];
+      const seq = [];
+
+      function traverse(node) {
+        if (!node) return;
+        if (order === 'preorder') {
+          visited.push(node.val);
+          seq.push(makeFrame({
+            narration: `Preorder (Root-Left-Right): Visiting ${node.val} at ${toHexAddr(node.ramSlot)}.`,
+            status: `VISIT ${node.val}`,
+            highlightIdx: node.val,
+            auxText: `Preorder Traversal: [ ${visited.join(' → ')} ]`,
+            ramAccessSlot: node.ramSlot
+          }));
+        }
+        traverse(node.left);
+        if (order === 'inorder') {
+          visited.push(node.val);
+          seq.push(makeFrame({
+            narration: `Inorder (Left-Root-Right): Visiting ${node.val} at ${toHexAddr(node.ramSlot)}.`,
+            status: `VISIT ${node.val}`,
+            highlightIdx: node.val,
+            auxText: `Inorder Traversal: [ ${visited.join(' → ')} ]`,
+            ramAccessSlot: node.ramSlot
+          }));
+        }
+        traverse(node.right);
+        if (order === 'postorder') {
+          visited.push(node.val);
+          seq.push(makeFrame({
+            narration: `Postorder (Left-Right-Root): Visiting ${node.val} at ${toHexAddr(node.ramSlot)}.`,
+            status: `VISIT ${node.val}`,
+            highlightIdx: node.val,
+            auxText: `Postorder Traversal: [ ${visited.join(' → ')} ]`,
+            ramAccessSlot: node.ramSlot
+          }));
+        }
+      }
+
+      traverse(root);
+      playFrames(seq);
+    }
+
+    function runAvlDemo(rotType) {
+      const seq = [];
+      if (rotType === 'LL') {
+        avlRoot = {
+          val: 30, ramSlot: 3, bf: '+2', bfVal: 2,
+          left: { val: 20, ramSlot: 14, bf: '+1', bfVal: 1, left: { val: 10, ramSlot: 27, bf: '0', bfVal: 0, left: null, right: null }, right: null },
+          right: null
+        };
+        seq.push(makeFrame({
+          narration: `Step 1 (Unbalanced Tree): Inserted 10 into left subtree of 20. Node 30 now has BF = +2 (LL Imbalance).`,
+          status: `BF(30) = +2 [LL]`,
+          warnIdx: 30,
+          secondaryIdx: 20,
+          avlBanner: { type: 'warn', text: `Imbalance Detected at Node 30 (BF = +2) → Performing LL (Right) Rotation around 20` },
+          ramAccessSlot: 3
+        }));
+        avlRoot = {
+          val: 20, ramSlot: 14, bf: '0', bfVal: 0,
+          left: { val: 10, ramSlot: 27, bf: '0', bfVal: 0, left: null, right: null },
+          right: { val: 30, ramSlot: 3, bf: '0', bfVal: 0, left: null, right: null }
+        };
+        seq.push(makeFrame({
+          narration: `Step 2 (LL Right Rotation Complete): Node 20 rises to root, and 30 becomes its right child. All Balance Factors are 0.`,
+          status: `BALANCED (ROOT=20)`,
+          foundIdx: 20,
+          avlBanner: { type: 'ok', text: `LL (Right) Rotation Complete — Balanced at Root 20 (BF = 0)` },
+          ramAccessSlot: 14
+        }));
+      }
+      else if (rotType === 'RR') {
+        avlRoot = {
+          val: 10, ramSlot: 5, bf: '-2', bfVal: -2,
+          left: null,
+          right: { val: 20, ramSlot: 16, bf: '-1', bfVal: -1, left: null, right: { val: 30, ramSlot: 29, bf: '0', bfVal: 0, left: null, right: null } }
+        };
+        seq.push(makeFrame({
+          narration: `Step 1 (Unbalanced Tree): Inserted 30 into right subtree of 20. Node 10 now has BF = -2 (RR Imbalance).`,
+          status: `BF(10) = -2 [RR]`,
+          warnIdx: 10,
+          secondaryIdx: 20,
+          avlBanner: { type: 'warn', text: `Imbalance Detected at Node 10 (BF = -2) → Performing RR (Left) Rotation around 20` },
+          ramAccessSlot: 5
+        }));
+        avlRoot = {
+          val: 20, ramSlot: 16, bf: '0', bfVal: 0,
+          left: { val: 10, ramSlot: 5, bf: '0', bfVal: 0, left: null, right: null },
+          right: { val: 30, ramSlot: 29, bf: '0', bfVal: 0, left: null, right: null }
+        };
+        seq.push(makeFrame({
+          narration: `Step 2 (RR Left Rotation Complete): Node 20 rises to root, and 10 becomes its left child. All Balance Factors are 0.`,
+          status: `BALANCED (ROOT=20)`,
+          foundIdx: 20,
+          avlBanner: { type: 'ok', text: `RR (Left) Rotation Complete — Balanced at Root 20 (BF = 0)` },
+          ramAccessSlot: 16
+        }));
+      }
+      else if (rotType === 'LR') {
+        avlRoot = {
+          val: 30, ramSlot: 4, bf: '+2', bfVal: 2,
+          left: { val: 10, ramSlot: 18, bf: '-1', bfVal: -1, left: null, right: { val: 20, ramSlot: 25, bf: '0', bfVal: 0, left: null, right: null } },
+          right: null
+        };
+        seq.push(makeFrame({
+          narration: `Step 1 (Unbalanced Tree): Root 30 has BF = +2 and Left Child 10 has BF = -1 (LR Case). First: Left-Rotate child 10.`,
+          status: `LR IMBALANCE (BF=+2)`,
+          warnIdx: 30,
+          secondaryIdx: 10,
+          avlBanner: { type: 'warn', text: `Imbalance Detected at Node 30 (BF = +2, Left Child BF = -1) → LR Double Rotation` },
+          ramAccessSlot: 18
+        }));
+        avlRoot = {
+          val: 30, ramSlot: 4, bf: '+2', bfVal: 2,
+          left: { val: 20, ramSlot: 25, bf: '+1', bfVal: 1, left: { val: 10, ramSlot: 18, bf: '0', bfVal: 0, left: null, right: null }, right: null },
+          right: null
+        };
+        seq.push(makeFrame({
+          narration: `Step 2 (LR Intermediate LL State): Left-Rotated 10 so 20 is now left child of 30. Next: Right-Rotate root 30.`,
+          status: `STEP 2: ROT_R(30)`,
+          warnIdx: 30,
+          highlightIdx: 20,
+          avlBanner: { type: 'info', text: `LR Step 1 Complete (Left-Rotated 10) → Now Right-Rotating Root 30` },
+          ramAccessSlot: 25
+        }));
+        avlRoot = {
+          val: 20, ramSlot: 25, bf: '0', bfVal: 0,
+          left: { val: 10, ramSlot: 18, bf: '0', bfVal: 0, left: null, right: null },
+          right: { val: 30, ramSlot: 4, bf: '0', bfVal: 0, left: null, right: null }
+        };
+        seq.push(makeFrame({
+          narration: `Step 3 (LR Double Rotation Complete): Right-Rotated 30. Node 20 is now the balanced root (BF = 0).`,
+          status: `BALANCED (ROOT=20)`,
+          foundIdx: 20,
+          avlBanner: { type: 'ok', text: `LR Double Rotation Complete — Balanced at Root 20 (BF = 0)` },
+          ramAccessSlot: 25
+        }));
+      }
+      else if (rotType === 'RL') {
+        avlRoot = {
+          val: 10, ramSlot: 6, bf: '-2', bfVal: -2,
+          left: null,
+          right: { val: 30, ramSlot: 19, bf: '+1', bfVal: 1, left: { val: 20, ramSlot: 26, bf: '0', bfVal: 0, left: null, right: null }, right: null }
+        };
+        seq.push(makeFrame({
+          narration: `Step 1 (Unbalanced Tree): Root 10 has BF = -2 and Right Child 30 has BF = +1 (RL Case). First: Right-Rotate child 30.`,
+          status: `RL IMBALANCE (BF=-2)`,
+          warnIdx: 10,
+          secondaryIdx: 30,
+          avlBanner: { type: 'warn', text: `Imbalance Detected at Node 10 (BF = -2, Right Child BF = +1) → RL Double Rotation` },
+          ramAccessSlot: 19
+        }));
+        avlRoot = {
+          val: 10, ramSlot: 6, bf: '-2', bfVal: -2,
+          left: null,
+          right: { val: 20, ramSlot: 26, bf: '-1', bfVal: -1, left: null, right: { val: 30, ramSlot: 19, bf: '0', bfVal: 0, left: null, right: null } }
+        };
+        seq.push(makeFrame({
+          narration: `Step 2 (RL Intermediate RR State): Right-Rotated 30 so 20 is now right child of 10. Next: Left-Rotate root 10.`,
+          status: `STEP 2: ROT_L(10)`,
+          warnIdx: 10,
+          highlightIdx: 20,
+          avlBanner: { type: 'info', text: `RL Step 1 Complete (Right-Rotated 30) → Now Left-Rotating Root 10` },
+          ramAccessSlot: 26
+        }));
+        avlRoot = {
+          val: 20, ramSlot: 26, bf: '0', bfVal: 0,
+          left: { val: 10, ramSlot: 6, bf: '0', bfVal: 0, left: null, right: null },
+          right: { val: 30, ramSlot: 19, bf: '0', bfVal: 0, left: null, right: null }
+        };
+        seq.push(makeFrame({
+          narration: `Step 3 (RL Double Rotation Complete): Left-Rotated 10. Node 20 is now the balanced root (BF = 0).`,
+          status: `BALANCED (ROOT=20)`,
+          foundIdx: 20,
+          avlBanner: { type: 'ok', text: `RL Double Rotation Complete — Balanced at Root 20 (BF = 0)` },
+          ramAccessSlot: 26
+        }));
+      }
+      playFrames(seq);
+    }
+
+    function heapInsert() {
+      if (heapArray.length >= 7) heapArray.pop();
+      heapSortedCount = 0;
+      const val = selectedValue;
+      heapArray.push(val);
+      let idx = heapArray.length - 1;
+      const seq = [];
+
+      seq.push(makeFrame({
+        narration: `Inserted ${val} at index [${idx}] (${toHexAddr(idx)}). Comparing with parent to bubble up.`,
+        status: `APPEND @ [${idx}]`,
+        highlightIdx: idx,
+        ramAccessSlot: idx
+      }));
+
+      while (idx > 0) {
+        const parentIdx = Math.floor((idx - 1) / 2);
+        if (heapArray[idx] > heapArray[parentIdx]) {
+          [heapArray[idx], heapArray[parentIdx]] = [heapArray[parentIdx], heapArray[idx]];
+          seq.push(makeFrame({
+            narration: `Bubble Up: ${heapArray[parentIdx]} > parent ${heapArray[idx]}. Swapped [${idx}] ↔ [${parentIdx}].`,
+            status: `SWAP [${idx}]↔[${parentIdx}]`,
+            highlightIdx: parentIdx,
+            secondaryIdx: idx,
+            ramAccessSlot: parentIdx
+          }));
+          idx = parentIdx;
+        } else break;
+      }
+
+      seq.push(makeFrame({
+        narration: `Max-Heap property satisfied.`,
+        status: `HEAP READY`,
+        highlightIdx: idx
+      }));
+      playFrames(seq);
+    }
+
+    function heapBuildHeapify() {
+      heapSortedCount = 0;
+      heapArray = [25, 80, 40, 95, 15, 70, 60];
+      const seq = [makeFrame({
+        narration: `Starting bottom-up Heapify on [${heapArray.join(', ')}].`,
+        status: 'HEAPIFY INIT'
+      })];
+
+      for (let i = Math.floor(heapArray.length / 2) - 1; i >= 0; i--) {
+        siftDownFrames(i, heapArray.length, seq);
+      }
+
+      seq.push(makeFrame({
+        narration: `Heapify complete! Maximum element ${heapArray[0]} is at root [0].`,
+        status: 'MAX-HEAP READY',
+        highlightIdx: 0,
+        ramAccessSlot: 0
+      }));
+      playFrames(seq);
+    }
+
+    function siftDownFrames(idx, size, seq) {
+      while (true) {
+        let largest = idx;
+        const left = 2 * idx + 1;
+        const right = 2 * idx + 2;
+        if (left < size && heapArray[left] > heapArray[largest]) largest = left;
+        if (right < size && heapArray[right] > heapArray[largest]) largest = right;
+        if (largest !== idx) {
+          [heapArray[idx], heapArray[largest]] = [heapArray[largest], heapArray[idx]];
+          seq.push(makeFrame({
+            narration: `Sift Down: Swapped parent [${idx}] with larger child [${largest}] (${heapArray[idx]}).`,
+            status: `SWAP [${idx}]↔[${largest}]`,
+            highlightIdx: largest,
+            secondaryIdx: idx,
+            ramAccessSlot: largest
+          }));
+          idx = largest;
+        } else break;
+      }
+    }
+
+    function heapRunSort() {
+      heapSortedCount = 0;
+      const seq = [];
+      for (let i = Math.floor(heapArray.length / 2) - 1; i >= 0; i--) {
+        siftDownFrames(i, heapArray.length, seq);
+      }
+
+      for (let end = heapArray.length - 1; end > 0; end--) {
+        [heapArray[0], heapArray[end]] = [heapArray[end], heapArray[0]];
+        heapSortedCount = heapArray.length - end;
+        seq.push(makeFrame({
+          narration: `Extract Max: Moved max ${heapArray[end]} to sorted position [${end}] and sifting remaining heap.`,
+          status: `SORTED [${end}] = ${heapArray[end]}`,
+          highlightIdx: end,
+          secondaryIdx: 0,
+          ramAccessSlot: end
+        }));
+        siftDownFrames(0, end, seq);
+      }
+      heapSortedCount = heapArray.length;
+      seq.push(makeFrame({
+        narration: `Heap Sort complete! Array sorted in-place: [${heapArray.join(', ')}].`,
+        status: 'SORTED',
+        highlightIdx: 0
+      }));
+      playFrames(seq);
+    }
+
+    // -------------------------------------------------------------------------
+    // GATEVIDYALAY STEP-BY-STEP HUFFMAN TREE CONSTRUCTION
+    // -------------------------------------------------------------------------
+    function resetHuffmanForest(presetKey) {
+      const raw = HUFFMAN_PRESETS[presetKey] || HUFFMAN_PRESETS.GATE;
+      huffmanSlotSeed = 2;
+      huffmanForest = raw.map(item => ({
+        id: `leaf-${item.ch}`,
+        val: `${item.ch}:${item.freq}`,
+        ch: item.ch,
+        freq: item.freq,
+        ramSlot: (huffmanSlotSeed = (huffmanSlotSeed + 4) % 31),
+        left: null,
+        right: null
+      })).sort((a, b) => a.freq - b.freq);
+      huffmanCodes = {};
+    }
+
+    function computeHuffmanCodes(root) {
+      const codes = {};
+      function walk(node, bits) {
+        if (!node) return;
+        if (node.ch) codes[node.ch] = bits || '0';
+        walk(node.left, bits + '0');
+        walk(node.right, bits + '1');
+      }
+      walk(root, '');
+      return codes;
+    }
+
+    function huffmanStepMerge() {
+      if (huffmanForest.length <= 1) {
+        playFrames([makeFrame({
+          narration: `Huffman Tree is already completely built (1 root node with total frequency ${huffmanForest[0]?.freq}). Click 'Reset to Sorted Leaf Nodes' to restart.`,
+          status: 'COMPLETE',
+          auxText: formatHuffmanCodesAux()
+        })]);
+        return;
+      }
+
+      const seq = [];
+      const first = huffmanForest[0];
+      const second = huffmanForest[1];
+
+      // Frame 1: Highlight the two minimum frequency nodes at front of sorted queue
+      seq.push(makeFrame({
+        narration: `Step 1: Select the two minimum-frequency nodes from the sorted queue: (${first.val}) and (${second.val}).`,
+        status: `MIN PAIR: ${first.freq} & ${second.freq}`,
+        highlightIdx: first.val,
+        secondaryIdx: second.val,
+        ramAccessSlot: first.ramSlot
+      }));
+
+      // Frame 2: Merge them into a new internal node (freq = first.freq + second.freq) and re-sort into forest
+      huffmanForest.shift();
+      huffmanForest.shift();
+      const newFreq = first.freq + second.freq;
+      const newSlot = (huffmanSlotSeed = (huffmanSlotSeed + 5) % 31);
+      const mergedNode = {
+        id: `merge-${newFreq}-${Date.now()}`,
+        val: `${newFreq}`,
+        ch: null,
+        freq: newFreq,
+        ramSlot: newSlot,
+        left: first,
+        right: second
+      };
+
+      huffmanForest.push(mergedNode);
+      huffmanForest.sort((a, b) => a.freq - b.freq);
+
+      let auxMsg = `Sorted Queue (${huffmanForest.length} node${huffmanForest.length > 1 ? 's' : ''}): ${huffmanForest.map(n => `[${n.val}]`).join('  ')}`;
+      if (huffmanForest.length === 1) {
+        huffmanCodes = computeHuffmanCodes(huffmanForest[0]);
+        auxMsg = formatHuffmanCodesAux();
+      }
+
+      seq.push(makeFrame({
+        narration: `Step 2: Merged (${first.val}) [edge 0] + (${second.val}) [edge 1] → Created parent (${newFreq}) and re-sorted into queue.`,
+        status: huffmanForest.length === 1 ? `TREE COMPLETE (${newFreq})` : `MERGED → ${newFreq}`,
+        highlightIdx: mergedNode.val,
+        auxText: auxMsg,
+        ramAccessSlot: newSlot
+      }));
+
+      playFrames(seq);
+    }
+
+    function runHuffmanBuildAll() {
+      resetHuffmanForest(huffmanPresetKey);
+      const seq = [];
+
+      seq.push(makeFrame({
+        narration: `Initial State: Leaf nodes sorted in ascending order of frequency: ${huffmanForest.map(n => `[${n.val}]`).join(', ')}.`,
+        status: 'SORTED NODES',
+        auxText: `Sorted Queue: ${huffmanForest.map(n => `[${n.val}]`).join('  ')}`
+      }));
+
+      let stepNum = 1;
+      while (huffmanForest.length > 1) {
+        const first = huffmanForest[0];
+        const second = huffmanForest[1];
+
+        seq.push(makeFrame({
+          narration: `Merge ${stepNum}a: Pick two smallest frequency nodes at front: (${first.val}) and (${second.val}).`,
+          status: `PICK ${first.freq}, ${second.freq}`,
+          highlightIdx: first.val,
+          secondaryIdx: second.val,
+          auxText: `Sorted Queue: ${huffmanForest.map(n => `[${n.val}]`).join('  ')}`,
+          ramAccessSlot: first.ramSlot
+        }));
+
+        huffmanForest.shift();
+        huffmanForest.shift();
+        const newFreq = first.freq + second.freq;
+        const newSlot = (huffmanSlotSeed = (huffmanSlotSeed + 5) % 31);
+        const mergedNode = {
+          id: `merge-${newFreq}-${stepNum}`,
+          val: `${newFreq}`,
+          ch: null,
+          freq: newFreq,
+          ramSlot: newSlot,
+          left: first,
+          right: second
+        };
+        huffmanForest.push(mergedNode);
+        huffmanForest.sort((a, b) => a.freq - b.freq);
+
+        seq.push(makeFrame({
+          narration: `Merge ${stepNum}b: Combined (${first.val}) + (${second.val}) → (${newFreq}) with edges 0 (left) and 1 (right), then re-sorted queue.`,
+          status: `MERGED → ${newFreq}`,
+          highlightIdx: mergedNode.val,
+          auxText: `Sorted Queue: ${huffmanForest.map(n => `[${n.val}]`).join('  ')}`,
+          ramAccessSlot: newSlot
+        }));
+        stepNum++;
+      }
+
+      huffmanCodes = computeHuffmanCodes(huffmanForest[0]);
+      seq.push(makeFrame({
+        narration: `Huffman Tree Complete! Root weight = ${huffmanForest[0].freq}. Read 0/1 edges from root to leaves for prefix codes.`,
+        status: 'HUFFMAN COMPLETE',
+        highlightIdx: huffmanForest[0].val,
+        auxText: formatHuffmanCodesAux()
+      }));
+
+      playFrames(seq);
+    }
+
+    function formatHuffmanCodesAux() {
+      const pairs = Object.entries(huffmanCodes).map(([ch, code]) => `${ch} = ${code}`).join('   |   ');
+      return pairs ? `Huffman Prefix Codes:   ${pairs}` : '';
+    }
+
+    // -------------------------------------------------------------------------
+    // 06 GRAPH TRAVERSALS
+    // -------------------------------------------------------------------------
+    function runGraphTraversal(mode) {
+      const adj = GRAPH_ADJ[graphPreset];
+      const visited = [];
+      const activeEdges = [];
+      const seq = [];
+
+      if (mode === 'BFS') {
+        const q = [selectedVertex];
+        const seen = new Set([selectedVertex]);
+
+        seq.push(makeFrame({
+          narration: `BFS Start: Enqueued starting vertex ${selectedVertex} into FIFO queue.`,
+          status: `BFS START: ${selectedVertex}`,
+          graphState: { current: selectedVertex, visited: [...visited], container: [...q], activeEdges: [] },
+          auxText: `Queue: [ ${q.join(', ')} ]   |   Visited: [ ]`,
+          ramAccessSlot: GRAPH_COORDS[selectedVertex].ram
+        }));
+
+        while (q.length > 0) {
+          const curr = q.shift();
+          visited.push(curr);
+          seq.push(makeFrame({
+            narration: `BFS Step: Dequeued ${curr} (${toHexAddr(GRAPH_COORDS[curr].ram)}). Exploring neighbors: [${(adj[curr] || []).join(', ')}].`,
+            status: `VISIT ${curr}`,
+            graphState: { current: curr, visited: [...visited], container: [...q], activeEdges: [...activeEdges] },
+            auxText: `Queue: [ ${q.join(', ')} ]   |   Visited: [ ${visited.join(' → ')} ]`,
+            ramAccessSlot: GRAPH_COORDS[curr].ram
+          }));
+
+          for (const nb of (adj[curr] || [])) {
+            if (!seen.has(nb)) {
+              seen.add(nb);
+              q.push(nb);
+              activeEdges.push(`${curr}-${nb}`);
+              seq.push(makeFrame({
+                narration: `BFS Discover: Traversed edge ${curr} → ${nb} and enqueued ${nb}.`,
+                status: `ENQUEUE ${nb}`,
+                graphState: { current: nb, visited: [...visited], container: [...q], activeEdges: [...activeEdges] },
+                auxText: `Queue: [ ${q.join(', ')} ]   |   Visited: [ ${visited.join(' → ')} ]`,
+                ramAccessSlot: GRAPH_COORDS[nb].ram
+              }));
+            }
+          }
+        }
+      } else {
+        const stack = [selectedVertex];
+        const seen = new Set();
+
+        while (stack.length > 0) {
+          const curr = stack.pop();
+          if (seen.has(curr)) continue;
+          seen.add(curr);
+          visited.push(curr);
+
+          const neighbors = [...(adj[curr] || [])].reverse();
+          for (const nb of neighbors) {
+            if (!seen.has(nb)) {
+              stack.push(nb);
+              activeEdges.push(`${curr}-${nb}`);
+            }
+          }
+
+          seq.push(makeFrame({
+            narration: `DFS Step: Popped ${curr} (${toHexAddr(GRAPH_COORDS[curr].ram)}) and pushed unvisited neighbors onto stack.`,
+            status: `DFS VISIT ${curr}`,
+            graphState: { current: curr, visited: [...visited], container: [...stack], activeEdges: [...activeEdges] },
+            auxText: `Stack: [ ${stack.join(', ')} ]   |   Visited: [ ${visited.join(' → ')} ]`,
+            ramAccessSlot: GRAPH_COORDS[curr].ram
+          }));
+        }
+      }
+
+      playFrames(seq);
+    }
+
+    // -------------------------------------------------------------------------
+    // MASTER RENDERER (CONCEPTUAL VIEWPORT + HARDWARE INSPECTOR)
+    // -------------------------------------------------------------------------
+    function renderCurrentFrame() {
+      const f = frames[currentFrameIdx];
+      if (!f) return;
+
+      document.getElementById('narration-text').innerText = f.narration;
+
+      const statusPill = document.getElementById('status-pill');
+      statusPill.innerText = f.status;
+      const errBanner = document.getElementById('error-banner');
+      const stage = document.getElementById('visual-stage');
+
+      if (f.isError) {
+        statusPill.className = "text-[10px] font-mono font-bold px-2 py-0.5 rounded-xs bg-red-500/20 text-red-300 border border-red-500/50";
+        errBanner.classList.remove('hidden');
+        document.getElementById('error-code-tag').innerText = f.errorTitle || 'ERROR';
+        document.getElementById('error-banner-msg').innerText = f.narration;
+        stage.classList.remove('anim-error-shake');
+        void stage.offsetWidth;
+        stage.classList.add('anim-error-shake');
+      } else {
+        statusPill.className = "text-[10px] font-mono font-semibold px-2 py-0.5 rounded-xs bg-sky-500/10 text-sky-400 border border-sky-500/30";
+        errBanner.classList.add('hidden');
+        stage.classList.remove('anim-error-shake');
+      }
+
+      updateTransportUI();
+
+      const aux = document.getElementById('aux-tray');
+      if (f.auxText) {
+        aux.classList.remove('hidden');
+        aux.innerText = f.auxText;
+      } else {
+        aux.classList.add('hidden');
+      }
+
+      stage.innerHTML = '';
+      const snap = f.snapshotData;
+
+      if (f.ds === 'array') renderArrayStage(stage, snap.arrayItems, f);
+      else if (f.ds === 'stack') renderStackStage(stage, snap.stackItems, f);
+      else if (f.ds === 'queue') renderQueueStage(stage, snap, f);
+      else if (f.ds === 'linked') renderLinkedStage(stage, snap, f);
+      else if (f.ds === 'tree') renderTreeStage(stage, snap, f);
+      else if (f.ds === 'graph') renderGraphStage(stage, snap, f);
+
+      renderHardwareInspector(f);
+    }
+
+    function renderArrayStage(stage, items, f) {
+      const wrap = document.createElement('div');
+      wrap.className = "flex flex-col items-center space-y-3";
+
+      const row = document.createElement('div');
+      row.className = `flex items-center divide-x divide-carbon-700 border ${f.isError ? 'border-red-500 ring-2 ring-red-500/30' : 'border-carbon-700'} bg-carbon-900 rounded-sm shadow-2xl`;
+
+      for (let i = 0; i < ARRAY_CAP; i++) {
+        const val = items[i];
+        const isHigh = f.highlightIdx === i;
+        const isAnim = f.animIdx === i;
+        const shiftClass = isHigh && f.shiftDir === 'right' ? 'anim-shift-r' : (isHigh && f.shiftDir === 'left' ? 'anim-shift-l' : '');
+
+        const cell = document.createElement('div');
+        cell.className = `w-16 sm:w-20 h-24 flex flex-col items-center justify-between p-2 font-mono transition-all ${shiftClass} ${isAnim ? 'anim-pop' : ''} ${
+          val !== undefined
+            ? (isHigh ? 'bg-sky-500/20 text-white ring-1 ring-inset ring-sky-400' : 'bg-carbon-900 text-zinc-100')
+            : 'bg-carbon-950/60 text-zinc-600'
+        }`;
+        cell.innerHTML = `
+          <div class="w-full flex items-center justify-between text-[10px] ${isHigh ? 'text-sky-300' : 'text-zinc-500'}">
+            <span>[${i}]</span>
+            <span>${toHexAddr(i)}</span>
+          </div>
+          <span class="text-xl font-bold tracking-tight ${isHigh ? 'text-sky-300' : ''}">${val !== undefined ? val : '—'}</span>
+          <span class="text-[9px] uppercase tracking-widest ${val !== undefined ? 'text-zinc-500' : 'text-zinc-700'}">${val !== undefined ? 'USED' : 'EMPTY'}</span>
+        `;
+        row.appendChild(cell);
+      }
+
+      wrap.appendChild(row);
+      stage.appendChild(wrap);
+    }
+
+    function renderStackStage(stage, items, f) {
+      const wrap = document.createElement('div');
+      wrap.className = "flex items-center justify-center gap-10";
+
+      const tower = document.createElement('div');
+      tower.className = `w-52 border-x border-b ${f.isError ? 'border-red-500 ring-2 ring-red-500/30' : 'border-carbon-600'} bg-carbon-900/70 p-2 flex flex-col-reverse divide-y divide-y-reverse divide-carbon-700 rounded-b-sm`;
+
+      for (let i = 0; i < STACK_CAP; i++) {
+        const val = items[i];
+        const isTop = i === items.length - 1;
+        const isHigh = f.highlightIdx === i;
+        const block = document.createElement('div');
+
+        if (val !== undefined) {
+          block.className = `h-10 flex items-center justify-between px-3 font-mono text-xs transition-all ${
+            f.animIdx === i ? 'anim-drop' : ''
+          } ${
+            isTop ? 'bg-sky-500/15 text-sky-300 border-l-2 border-l-sky-400 font-semibold' : 'bg-carbon-900 text-zinc-200'
+          } ${isHigh ? 'ring-1 ring-inset ring-zinc-100' : ''}`;
+          block.innerHTML = `
+            <span class="text-[10px] text-zinc-500">${toHexAddr(8 + i)}</span>
+            <span class="text-sm font-bold text-zinc-100">${val}</span>
+            <span class="text-[10px] ${isTop ? 'text-sky-400 font-bold' : 'text-zinc-600'}">${isTop ? '← TOP' : `[${i}]`}</span>
+          `;
+        } else {
+          block.className = "h-10 flex items-center justify-between px-3 font-mono text-[10px] text-zinc-600 bg-carbon-950/40";
+          block.innerHTML = `<span>${toHexAddr(8 + i)}</span><span>EMPTY</span><span>[${i}]</span>`;
+        }
+        tower.appendChild(block);
+      }
+
+      const regBox = document.createElement('div');
+      regBox.className = `font-mono text-xs bg-carbon-900 border ${f.isError ? 'border-red-500' : 'border-carbon-700'} rounded-sm divide-y divide-carbon-700 w-44`;
+      regBox.innerHTML = `
+        <div class="px-3 py-1.5 text-[10px] text-zinc-400 uppercase tracking-widest">Stack Status</div>
+        <div class="px-3 py-2 flex items-center justify-between">
+          <span class="text-zinc-500">TOP Pointer</span>
+          <span class="font-bold ${items.length === 0 ? 'text-red-400' : 'text-sky-400'}">${items.length - 1}</span>
+        </div>
+        <div class="px-3 py-2 flex items-center justify-between">
+          <span class="text-zinc-500">Size</span>
+          <span class="text-zinc-200">${items.length} / ${STACK_CAP}</span>
+        </div>
+      `;
+
+      wrap.appendChild(tower);
+      wrap.appendChild(regBox);
+      stage.appendChild(wrap);
+    }
+
+    function renderQueueStage(stage, snap, f) {
+      if (snap.queueType === 'linear') {
+        const wrap = document.createElement('div');
+        wrap.className = "flex flex-col items-center space-y-4";
+
+        const isEmpty = snap.linFront > snap.linRear;
+        const row = document.createElement('div');
+        row.className = `flex items-center divide-x divide-carbon-700 border ${f.isError ? 'border-red-500 ring-2 ring-red-500/30' : 'border-carbon-700'} bg-carbon-900 rounded-sm shadow-2xl`;
+
+        for (let i = 0; i < LINEAR_Q_CAP; i++) {
+          const val = snap.linearQ[i];
+          const isVacated = i < snap.linFront;
+          const isOccupied = !isEmpty && i >= snap.linFront && i <= snap.linRear && val !== null;
+          const isFront = !isEmpty && i === snap.linFront;
+          const isRear = !isEmpty && i === snap.linRear;
+          const isHigh = f.highlightIdx === i;
+
+          const cell = document.createElement('div');
+          cell.className = `w-20 sm:w-24 h-28 flex flex-col items-center justify-between p-2 font-mono transition-all ${
+            f.animIdx === i ? 'anim-pop' : ''
+          } ${
+            isOccupied
+              ? (isHigh ? 'bg-sky-500/20 text-white ring-1 ring-inset ring-sky-400' : 'bg-carbon-900 text-zinc-100')
+              : (isVacated ? 'bg-red-950/20 text-zinc-600' : 'bg-carbon-950/60 text-zinc-600')
+          }`;
+
+          let pointerTag = '';
+          if (isFront && isRear) pointerTag = '<span class="text-[9px] font-bold text-emerald-400">FRONT / REAR</span>';
+          else if (isFront) pointerTag = '<span class="text-[9px] font-bold text-emerald-400">↑ FRONT</span>';
+          else if (isRear) pointerTag = '<span class="text-[9px] font-bold text-amber-400">↑ REAR</span>';
+          else if (isVacated) pointerTag = '<span class="text-[9px] text-red-400/70">VACATED</span>';
+          else pointerTag = '<span class="text-[9px] text-zinc-700">FREE</span>';
+
+          cell.innerHTML = `
+            <div class="w-full flex items-center justify-between text-[10px] text-zinc-500">
+              <span>[${i}]</span>
+              <span>${toHexAddr(16 + i)}</span>
+            </div>
+            <span class="text-xl font-bold ${isOccupied ? 'text-zinc-100' : 'text-zinc-700'}">${isOccupied ? val : '—'}</span>
+            ${pointerTag}
+          `;
+          row.appendChild(cell);
+        }
+
+        const meta = document.createElement('div');
+        meta.className = "flex items-center gap-6 font-mono text-xs text-zinc-400 bg-carbon-900 px-4 py-1.5 rounded-sm border border-carbon-700";
+        meta.innerHTML = `
+          <span>FRONT = <strong class="text-emerald-400">${snap.linFront}</strong></span>
+          <span>REAR = <strong class="text-amber-400">${snap.linRear}</strong></span>
+          <span>Active Items = <strong class="text-zinc-100">${isEmpty ? 0 : (snap.linRear - snap.linFront + 1)}</strong></span>
+        `;
+
+        wrap.appendChild(row);
+        wrap.appendChild(meta);
+        stage.appendChild(wrap);
+      }
+      else if (snap.queueType === 'circular') {
+        const ring = document.createElement('div');
+        ring.className = "relative w-64 h-64 flex items-center justify-center";
+        const radius = 102;
+
+        snap.circularQ.forEach((val, i) => {
+          const angle = (i / 8) * (2 * Math.PI) - Math.PI / 2;
+          const x = Math.round(radius * Math.cos(angle));
+          const y = Math.round(radius * Math.sin(angle));
+          const isFront = i === snap.qFront && snap.qCount > 0;
+          const isRear = i === snap.qRear;
+
+          const slot = document.createElement('div');
+          slot.style.transform = `translate(${x}px, ${y}px)`;
+          slot.className = `absolute w-14 h-14 rounded-sm border flex flex-col items-center justify-between p-1 font-mono transition-all ${
+            val !== null ? 'bg-carbon-900 text-zinc-100 border-sky-500/50' : 'bg-carbon-950 text-zinc-600 border-carbon-700'
+          } ${f.highlightIdx === i ? 'ring-1 ring-zinc-100 bg-sky-500/20' : ''} ${f.isError ? 'border-red-500' : ''}`;
+          slot.innerHTML = `
+            <div class="w-full flex justify-between text-[8px] text-zinc-500">
+              <span>[${i}]</span>
+              <span>${toHexAddr(16 + i)}</span>
+            </div>
+            <span class="text-sm font-bold">${val !== null ? val : '·'}</span>
+            <span class="text-[8px] font-semibold uppercase ${isFront ? 'text-emerald-400' : (isRear ? 'text-amber-400' : 'opacity-0')}">
+              ${isFront && isRear ? 'F/R' : (isFront ? 'FRONT' : 'REAR')}
+            </span>
+          `;
+          ring.appendChild(slot);
+        });
+
+        const centerLabel = document.createElement('div');
+        centerLabel.className = "text-center font-mono border border-carbon-700 bg-carbon-900 px-3 py-2 rounded-sm";
+        centerLabel.innerHTML = `
+          <div class="text-[9px] text-zinc-500 uppercase tracking-widest">Circular Queue</div>
+          <div class="text-xs font-bold text-zinc-200 mt-0.5">${snap.qCount} / 8 Used</div>
+        `;
+        ring.appendChild(centerLabel);
+        stage.appendChild(ring);
+      } else {
+        // Max-Priority Queue (Value = Priority, Strictly Unique, Descending Order)
+        const wrap = document.createElement('div');
+        wrap.className = "flex flex-col items-center space-y-4";
+
+        const topNote = document.createElement('div');
+        topNote.className = "text-[11px] font-mono text-zinc-400 uppercase tracking-wider";
+        topNote.innerHTML = `Max-Priority Queue <span class="text-zinc-600">|</span> <span class="text-sky-400">Priority(x) = x</span> <span class="text-zinc-600">|</span> Strictly Unique Descending Order`;
+        wrap.appendChild(topNote);
+
+        const rowWrap = document.createElement('div');
+        rowWrap.className = "flex items-center gap-3";
+
+        const headTag = document.createElement('span');
+        headTag.className = "text-[10px] font-mono font-bold text-emerald-400 uppercase tracking-widest";
+        headTag.innerText = "HEAD (MAX) →";
+        rowWrap.appendChild(headTag);
+
+        const row = document.createElement('div');
+        row.className = `flex items-center divide-x divide-carbon-700 border ${f.isError ? 'border-red-500 ring-2 ring-red-500/30' : 'border-carbon-700'} bg-carbon-900 rounded-sm shadow-2xl`;
+
+        for (let i = 0; i < PRIO_Q_CAP; i++) {
+          const val = snap.priorityQ[i];
+          const isOccupied = val !== undefined;
+          const isHigh = f.highlightIdx === i;
+          const isAnim = f.animIdx === i;
+          const shiftClass = isHigh && f.shiftDir === 'right' ? 'anim-shift-r' : (f.shiftDir === 'left' && isOccupied ? 'anim-shift-l' : '');
+
+          const card = document.createElement('div');
+          card.className = `w-24 h-28 flex flex-col items-center justify-between p-2 font-mono transition-all ${shiftClass} ${isAnim ? 'anim-pop' : ''} ${
+            isOccupied
+              ? (isHigh ? 'bg-sky-500/20 text-white ring-1 ring-inset ring-sky-400' : (i === 0 ? 'bg-emerald-950/20 text-zinc-100' : 'bg-carbon-900 text-zinc-100'))
+              : 'bg-carbon-950/60 text-zinc-600'
+          }`;
+
+          if (isOccupied) {
+            const rankBadge = i === 0
+              ? 'text-emerald-300 bg-emerald-500/15 border-emerald-500/40'
+              : 'text-amber-300 bg-amber-500/10 border-amber-500/30';
+            card.innerHTML = `
+              <div class="w-full flex items-center justify-between text-[9px]">
+                <span class="px-1.5 py-0.5 rounded-xs border font-semibold ${rankBadge}">${i === 0 ? 'RANK #1' : `RANK #${i + 1}`}</span>
+                <span class="text-zinc-500">${toHexAddr(16 + i)}</span>
+              </div>
+              <span class="text-xl font-bold text-zinc-100">${val}</span>
+              <span class="text-[9px] text-sky-400 font-semibold">PRIO = ${val}</span>
+            `;
+          } else {
+            card.innerHTML = `
+              <div class="w-full flex items-center justify-between text-[9px] text-zinc-600">
+                <span>[${i}]</span>
+                <span>${toHexAddr(16 + i)}</span>
+              </div>
+              <span class="text-xl font-bold text-zinc-700">—</span>
+              <span class="text-[9px] text-zinc-700">FREE</span>
+            `;
+          }
+          row.appendChild(card);
+        }
+
+        rowWrap.appendChild(row);
+
+        const tailTag = document.createElement('span');
+        tailTag.className = "text-[10px] font-mono text-zinc-500 uppercase tracking-widest";
+        tailTag.innerText = "→ TAIL (MIN)";
+        rowWrap.appendChild(tailTag);
+
+        wrap.appendChild(rowWrap);
+
+        const meta = document.createElement('div');
+        meta.className = "flex items-center gap-6 font-mono text-xs text-zinc-400 bg-carbon-900 px-4 py-1.5 rounded-sm border border-carbon-700";
+        meta.innerHTML = `
+          <span>Highest Priority (HEAD) = <strong class="text-emerald-400">${snap.priorityQ[0] ?? 'None'}</strong></span>
+          <span>Lowest Priority (TAIL) = <strong class="text-amber-400">${snap.priorityQ[snap.priorityQ.length - 1] ?? 'None'}</strong></span>
+          <span>Occupied = <strong class="text-zinc-100">${snap.priorityQ.length} / ${PRIO_Q_CAP}</strong></span>
+        `;
+        wrap.appendChild(meta);
+
+        stage.appendChild(wrap);
+      }
+    }
+
+    function renderLinkedStage(stage, snap, f) {
+      const row = document.createElement('div');
+      row.className = "flex flex-wrap items-center justify-center gap-1.5 px-2";
+
+      if (snap.linkedNodes.length === 0) {
+        row.innerHTML = `<div class="text-zinc-500 font-mono text-xs border ${f.isError ? 'border-red-500 text-red-300' : 'border-carbon-700'} bg-carbon-900 px-4 py-2 rounded-sm">HEAD == NULL (Empty List)</div>`;
+        stage.appendChild(row);
+        return;
+      }
+
+      snap.linkedNodes.forEach((n, i) => {
+        const isHigh = f.highlightIdx === i;
+        const nextAddr = i < snap.linkedNodes.length - 1 ? toHexAddr(snap.linkedNodes[i + 1].ramSlot) : 'NULL';
+        const prevAddr = i > 0 ? toHexAddr(snap.linkedNodes[i - 1].ramSlot) : 'NULL';
+        const card = document.createElement('div');
+        card.className = `rounded-sm border font-mono transition-all flex flex-col ${
+          f.animIdx === i ? 'anim-pop' : ''
+        } ${
+          isHigh ? 'bg-sky-500/15 border-sky-400 text-white' : 'bg-carbon-900 border-carbon-700 text-zinc-200'
+        }`;
+
+        const role = i === 0 ? 'HEAD' : (i === snap.linkedNodes.length - 1 ? 'TAIL' : `NODE ${i}`);
+        card.innerHTML = `
+          <div class="px-2.5 py-1 border-b border-carbon-700 flex items-center justify-between gap-3 text-[9px] text-zinc-400">
+            <span class="font-bold ${isHigh ? 'text-sky-300' : 'text-zinc-300'}">${role}</span>
+            <span>@${toHexAddr(n.ramSlot)}</span>
+          </div>
+          <div class="flex items-center divide-x divide-carbon-700 text-xs">
+            ${snap.linkedType === 'doubly' ? `<span class="px-2 py-2 text-[9px] text-amber-300/80" title="Prev Pointer">${prevAddr}</span>` : ''}
+            <span class="px-3 py-2 font-bold text-sm text-zinc-100">${n.val}</span>
+            <span class="px-2 py-2 text-[9px] text-sky-400" title="Next Pointer">${nextAddr}</span>
+          </div>
+        `;
+        row.appendChild(card);
+
+        const arrow = document.createElement('div');
+        arrow.className = "font-mono text-zinc-500 text-xs px-1";
+        arrow.innerText = i < snap.linkedNodes.length - 1 ? (snap.linkedType === 'doubly' ? '⇄' : '→') : '→ NULL';
+        row.appendChild(arrow);
+      });
+
+      stage.appendChild(row);
+    }
+
+    function renderTreeStage(stage, snap, f) {
+      if (snap.treeType === 'heap') {
+        const wrap = document.createElement('div');
+        wrap.className = "w-full flex flex-col items-center space-y-3";
+        const buildHeapNode = (i) => {
+          if (i >= snap.heapArray.length) return null;
+          return {
+            val: snap.heapArray[i],
+            heapIdx: i,
+            isSorted: i >= (snap.heapArray.length - snap.heapSortedCount),
+            left: buildHeapNode(2 * i + 1),
+            right: buildHeapNode(2 * i + 2)
+          };
+        };
+        wrap.appendChild(renderSvgTree(buildHeapNode(0), f, true));
+
+        const arrRow = document.createElement('div');
+        arrRow.className = "flex items-center divide-x divide-carbon-700 border border-carbon-700 bg-carbon-900 rounded-sm";
+        snap.heapArray.forEach((v, i) => {
+          const isSorted = i >= (snap.heapArray.length - snap.heapSortedCount);
+          const isHigh = f.highlightIdx === i || f.secondaryIdx === i;
+          arrRow.innerHTML += `
+            <div class="w-12 h-12 flex flex-col items-center justify-center font-mono text-xs ${
+              isSorted ? 'bg-emerald-500/15 text-emerald-300 font-bold' :
+              (isHigh ? 'bg-sky-500/20 text-sky-300 font-bold ring-1 ring-inset ring-sky-400' : 'text-zinc-200')
+            }">
+              <span class="text-[9px] text-zinc-500">[${i}]</span>
+              <span>${v}</span>
+            </div>
+          `;
+        });
+        wrap.appendChild(arrRow);
+        stage.appendChild(wrap);
+      }
+      else if (snap.treeType === 'huffman') {
+        renderHuffmanStage(stage, snap, f);
+      }
+      else {
+        const root = snap.treeType === 'bst' ? snap.bstRoot : snap.avlRoot;
+        const wrap = document.createElement('div');
+        wrap.className = "w-full flex flex-col items-center space-y-3";
+
+        if (snap.treeType === 'avl' && f.avlBanner) {
+          const bannerStyles = {
+            warn: 'bg-red-950/80 border-red-500/60 text-red-200',
+            info: 'bg-amber-950/80 border-amber-500/60 text-amber-200',
+            ok:   'bg-emerald-950/80 border-emerald-500/60 text-emerald-200'
+          };
+          const tagStyles = {
+            warn: 'bg-red-500 text-carbon-950',
+            info: 'bg-amber-400 text-carbon-950',
+            ok:   'bg-emerald-400 text-carbon-950'
+          };
+          const tagLabels = {
+            warn: 'IMBALANCE DETECTED',
+            info: 'ROTATING',
+            ok:   'BALANCED'
+          };
+          const bType = f.avlBanner.type || 'info';
+          const banner = document.createElement('div');
+          banner.className = `px-3.5 py-2 rounded-sm border font-mono text-xs flex items-center gap-2.5 shadow-lg anim-pop ${bannerStyles[bType]}`;
+          banner.innerHTML = `
+            <span class="px-1.5 py-0.5 rounded-xs font-bold text-[10px] uppercase tracking-wider ${tagStyles[bType]}">${tagLabels[bType]}</span>
+            <span class="font-medium">${f.avlBanner.text}</span>
+          `;
+          wrap.appendChild(banner);
+        }
+
+        const existingSvg = stage.querySelector('svg[data-tree-mode="standard"]');
+        wrap.appendChild(renderSvgTree(root, f, false, false, existingSvg));
+        stage.innerHTML = '';
+        stage.appendChild(wrap);
+      }
+    }
+
+    function renderHuffmanStage(stage, snap, f) {
+      const wrap = document.createElement('div');
+      wrap.className = "w-full flex flex-col items-center space-y-4";
+
+      // 1. Top Sorted Frequency Queue / Forest Strip (GateVidyalay style)
+      const queueBar = document.createElement('div');
+      queueBar.className = "w-full max-w-[680px] bg-carbon-900 border border-carbon-700 rounded-sm p-2.5 flex flex-col gap-2";
+      const headerHtml = `
+        <div class="flex items-center justify-between text-[10px] font-mono text-zinc-400">
+          <span>SORTED PRIORITY QUEUE / FOREST (${snap.huffmanForest.length} SUBTREE${snap.huffmanForest.length > 1 ? 'S' : ''} REMAINING)</span>
+          <span class="text-sky-400">${snap.huffmanForest.length > 1 ? 'Next Merge: Pick first 2 minimum nodes' : 'Final Huffman Tree Built'}</span>
+        </div>
+      `;
+
+      const pillsHtml = snap.huffmanForest.map((node, idx) => {
+        const isMinCandidate = snap.huffmanForest.length > 1 && (idx === 0 || idx === 1);
+        const isHigh = f.highlightIdx === node.val || f.secondaryIdx === node.val;
+        return `
+          <div class="px-2.5 py-1.5 rounded-xs border font-mono text-xs flex items-center gap-1.5 ${
+            isHigh || isMinCandidate
+              ? 'bg-amber-500/15 border-amber-400 text-amber-200 font-bold'
+              : 'bg-carbon-950 border-carbon-700 text-zinc-200'
+          }">
+            <span class="text-[9px] text-zinc-500">#${idx + 1}</span>
+            <span>${node.ch ? `${node.ch} (${node.freq})` : `Node (${node.freq})`}</span>
+          </div>
+        `;
+      }).join('<span class="text-zinc-600 font-mono text-xs">≤</span>');
+
+      queueBar.innerHTML = `${headerHtml}<div class="flex flex-wrap items-center gap-2">${pillsHtml}</div>`;
+      wrap.appendChild(queueBar);
+
+      // 2. Render all trees in the active forest side-by-side in a multi-root SVG
+      const forest = snap.huffmanForest;
+      const svgContainer = document.createElement('div');
+      svgContainer.className = "w-full flex justify-center";
+
+      const nodes = [];
+      const edges = [];
+      const totalTrees = forest.length;
+      const canvasW = 680;
+      const slotW = canvasW / Math.max(totalTrees, 1);
+
+      function layoutSubtree(node, depth, x, spread) {
+        if (!node) return;
+        const y = 30 + depth * 52;
+        nodes.push({ node, x, y });
+        if (node.left) {
+          edges.push({ x1: x, y1: y, x2: x - spread, y2: y + 52, label: '0' });
+          layoutSubtree(node.left, depth + 1, x - spread, spread * 0.52);
+        }
+        if (node.right) {
+          edges.push({ x1: x, y1: y, x2: x + spread, y2: y + 52, label: '1' });
+          layoutSubtree(node.right, depth + 1, x + spread, spread * 0.52);
+        }
+      }
+
+      forest.forEach((rootNode, idx) => {
+        const centerX = slotW * idx + slotW / 2;
+        const initialSpread = totalTrees === 1 ? 140 : Math.min(slotW * 0.34, 65);
+        layoutSubtree(rootNode, 0, centerX, initialSpread);
+      });
+
+      let svg = `<svg viewBox="0 0 ${canvasW} 250" class="w-full max-w-[680px] h-[240px] overflow-visible font-mono">`;
+      edges.forEach(e => {
+        svg += `<line x1="${e.x1}" y1="${e.y1}" x2="${e.x2}" y2="${e.y2}" stroke="#3f3f46" stroke-width="1.5" />`;
+        const mx = (e.x1 + e.x2) / 2;
+        const my = (e.y1 + e.y2) / 2;
+        svg += `
+          <rect x="${mx - 7}" y="${my - 7}" width="14" height="14" rx="2" fill="#09090b" stroke="#27272a" />
+          <text x="${mx}" y="${my + 3.5}" fill="${e.label === '0' ? '#38bdf8' : '#fbbf24'}" font-size="9" font-weight="700" text-anchor="middle">${e.label}</text>
+        `;
+      });
+
+      nodes.forEach(({ node, x, y }) => {
+        const isHigh = f.highlightIdx === node.val || f.secondaryIdx === node.val;
+        const isLeaf = Boolean(node.ch);
+        if (isLeaf) {
+          const fill = isHigh ? '#0c4a6e' : '#121215';
+          const stroke = isHigh ? '#38bdf8' : '#10b981';
+          svg += `
+            <g transform="translate(${x}, ${y})">
+              <rect x="-24" y="-15" width="48" height="30" rx="3" fill="${fill}" stroke="${stroke}" stroke-width="1.5" />
+              <text dy="4" fill="#fafafa" font-size="11" font-weight="700" text-anchor="middle">${node.ch}:${node.freq}</text>
+            </g>
+          `;
+        } else {
+          const fill = isHigh ? '#78350f' : '#18181b';
+          const stroke = isHigh ? '#f59e0b' : '#52525b';
+          svg += `
+            <g transform="translate(${x}, ${y})">
+              <circle r="16" fill="${fill}" stroke="${stroke}" stroke-width="1.5" />
+              <text dy="4" fill="#fde68a" font-size="10" font-weight="700" text-anchor="middle">${node.freq}</text>
+            </g>
+          `;
+        }
+      });
+
+      svg += `</svg>`;
+      svgContainer.innerHTML = svg;
+      wrap.appendChild(svgContainer);
+
+      // 3. Live Prefix Codes Table at the bottom
+      const liveCodes = forest.length === 1 ? computeHuffmanCodes(forest[0]) : snap.huffmanCodes;
+      if (liveCodes && Object.keys(liveCodes).length > 0) {
+        const tableWrap = document.createElement('div');
+        tableWrap.className = "w-full max-w-[680px] bg-carbon-900 border border-carbon-700 rounded-sm p-2.5 font-mono";
+        const codeCards = Object.entries(liveCodes).sort((a, b) => a[0].localeCompare(b[0])).map(([ch, code]) => `
+          <div class="px-2.5 py-1 bg-carbon-950 border border-carbon-700 rounded-xs flex items-center justify-between gap-3 text-xs">
+            <span class="font-bold text-emerald-400">'${ch}'</span>
+            <span class="text-sky-300 font-bold tracking-wider">${code}</span>
+            <span class="text-[9px] text-zinc-500">${code.length}b</span>
+          </div>
+        `).join('');
+        tableWrap.innerHTML = `
+          <div class="text-[10px] text-zinc-400 uppercase tracking-wider mb-1.5">Generated Binary Prefix Codes (0 = Left, 1 = Right)</div>
+          <div class="grid grid-cols-3 sm:grid-cols-6 gap-1.5">${codeCards}</div>
+        `;
+        wrap.appendChild(tableWrap);
+      }
+
+      stage.appendChild(wrap);
+    }
+
+    // Track previous tree node coordinates so AVL rotations animate smoothly across frames
+    let prevTreeCoords = {};
+
+    function renderSvgTree(root, f, isHeap = false, isHuffman = false) {
+      const container = document.createElement('div');
+      container.className = "w-full flex justify-center";
+      if (!root) {
+        container.innerHTML = `<div class="text-zinc-500 font-mono text-xs">EMPTY TREE (ROOT == NULL)</div>`;
+        prevTreeCoords = {};
+        return container;
+      }
+
+      const nodes = [];
+      const edges = [];
+      function layout(node, depth, x, spread) {
+        if (!node) return;
+        const y = 34 + depth * 64;
+        nodes.push({ node, x, y });
+        if (node.left) {
+          edges.push({ id: `${node.val}-${node.left.val}`, x1: x, y1: y, x2: x - spread, y2: y + 64, label: isHuffman ? '0' : '' });
+          layout(node.left, depth + 1, x - spread, spread * 0.52);
+        }
+        if (node.right) {
+          edges.push({ id: `${node.val}-${node.right.val}`, x1: x, y1: y, x2: x + spread, y2: y + 64, label: isHuffman ? '1' : '' });
+          layout(node.right, depth + 1, x + spread, spread * 0.52);
+        }
+      }
+      layout(root, 0, 270, 115);
+
+      const nextCoords = {};
+      nodes.forEach(({ node, x, y }) => {
+        const key = isHeap ? `h-${node.heapIdx}` : `v-${node.val}`;
+        nextCoords[key] = { x, y };
+      });
+
+      let svg = `<svg data-tree-mode="standard" viewBox="0 0 540 240" class="w-full max-w-[540px] h-[230px] overflow-visible font-mono">`;
+      edges.forEach(e => {
+        svg += `<line class="svg-tree-edge" x1="${e.x1}" y1="${e.y1}" x2="${e.x2}" y2="${e.y2}" stroke="#3f3f46" stroke-width="1.5" />`;
+        if (e.label !== '') {
+          const mx = (e.x1 + e.x2) / 2;
+          const my = (e.y1 + e.y2) / 2 - 4;
+          svg += `<text x="${mx}" y="${my}" fill="#38bdf8" font-size="10" font-weight="600" text-anchor="middle">${e.label}</text>`;
+        }
+      });
+
+      nodes.forEach(({ node, x, y }) => {
+        const key = isHeap ? `h-${node.heapIdx}` : `v-${node.val}`;
+        const prev = prevTreeCoords[key] || { x, y };
+        const idMatch = isHeap ? (f.highlightIdx === node.heapIdx || f.secondaryIdx === node.heapIdx) : (f.highlightIdx === node.val || f.secondaryIdx === node.val);
+        const isWarn = !isHeap && (f.warnIdx === node.val || (node.bfVal !== undefined && Math.abs(node.bfVal) > 1));
+        const isFound = !isHeap && f.foundIdx === node.val;
+
+        const fill = (node.isSorted || isFound) ? '#064e3b' : (isWarn ? '#7f1d1d' : (idMatch ? '#0c4a6e' : '#121215'));
+        const stroke = (node.isSorted || isFound) ? '#10b981' : (isWarn ? '#ef4444' : (idMatch ? '#38bdf8' : '#52525b'));
+
+        svg += `
+          <g class="svg-tree-node" data-node-key="${key}" data-target-x="${x}" data-target-y="${y}" style="transform: translate(${prev.x}px, ${prev.y}px)">
+            <circle r="20" fill="${fill}" stroke="${stroke}" stroke-width="1.75" />
+            <text dy="4" fill="#fafafa" font-size="11" font-weight="600" text-anchor="middle">${node.val}</text>
+            ${node.bf !== undefined ? `<text dy="-25" fill="${isWarn ? '#f87171' : (isFound ? '#34d399' : '#f59e0b')}" font-size="9" font-weight="700" text-anchor="middle">BF:${node.bf}</text>` : ''}
+          </g>
+        `;
+      });
+      svg += `</svg>`;
+      container.innerHTML = svg;
+
+      // Trigger smooth CSS transform from previous coordinates to new rotated coordinates
+      requestAnimationFrame(() => {
+        const groups = container.querySelectorAll('.svg-tree-node');
+        groups.forEach(g => {
+          const tx = g.getAttribute('data-target-x');
+          const ty = g.getAttribute('data-target-y');
+          g.style.transform = `translate(${tx}px, ${ty}px)`;
+        });
+      });
+
+      prevTreeCoords = nextCoords;
+      return container;
+    }
+
+    // -------------------------------------------------------------------------
+    // GRAPH RENDERER WITH EXPLICIT GEOMETRIC ARROWHEADS FOR DIRECTED GRAPHS
+    // -------------------------------------------------------------------------
+    function renderGraphStage(stage, snap, f) {
+      const adj = GRAPH_ADJ[graphPreset];
+      const isDirected = (graphPreset === 'cyclic' || graphPreset === 'tree');
+      const gs = f.graphState || { current: null, visited: [], activeEdges: [] };
+      const drawnUndirected = new Set();
+      const NODE_RADIUS = 21;
+
+      let svg = `<svg viewBox="0 0 520 255" class="w-full max-w-[520px] h-[250px] font-mono overflow-visible">`;
+
+      Object.keys(adj).forEach(u => {
+        adj[u].forEach(v => {
+          if (!isDirected) {
+            const key = [u, v].sort().join('-');
+            if (drawnUndirected.has(key)) return;
+            drawnUndirected.add(key);
+          }
+
+          const p1 = GRAPH_COORDS[u];
+          const p2 = GRAPH_COORDS[v];
+          const isAct = isDirected
+            ? gs.activeEdges.includes(`${u}-${v}`)
+            : (gs.activeEdges.includes(`${u}-${v}`) || gs.activeEdges.includes(`${v}-${u}`));
+
+          const dx = p2.x - p1.x;
+          const dy = p2.y - p1.y;
+          const len = Math.hypot(dx, dy) || 1;
+          const ux = dx / len;
+          const uy = dy / len;
+
+          const startX = p1.x + ux * NODE_RADIUS;
+          const startY = p1.y + uy * NODE_RADIUS;
+          const endX = p2.x - ux * (NODE_RADIUS + (isDirected ? 2 : 0));
+          const endY = p2.y - uy * (NODE_RADIUS + (isDirected ? 2 : 0));
+
+          const strokeColor = isAct ? '#38bdf8' : '#52525b';
+          const strokeWidth = isAct ? '2.5' : '1.75';
+
+          svg += `<line x1="${startX}" y1="${startY}" x2="${endX}" y2="${endY}" stroke="${strokeColor}" stroke-width="${strokeWidth}" />`;
+
+          // Explicit high-contrast triangular arrowhead in user-space coordinates
+          if (isDirected) {
+            const arrowLen = 11;
+            const arrowWidth = 5.5;
+            const baseX = endX - ux * arrowLen;
+            const baseY = endY - uy * arrowLen;
+            const perpX = -uy * arrowWidth;
+            const perpY = ux * arrowWidth;
+
+            const c1x = (baseX + perpX).toFixed(1);
+            const c1y = (baseY + perpY).toFixed(1);
+            const c2x = (baseX - perpX).toFixed(1);
+            const c2y = (baseY - perpY).toFixed(1);
+
+            svg += `<polygon points="${endX.toFixed(1)},${endY.toFixed(1)} ${c1x},${c1y} ${c2x},${c2y}" fill="${isAct ? '#38bdf8' : '#a1a1aa'}" />`;
+          }
+        });
+      });
+
+      Object.keys(GRAPH_COORDS).forEach(v => {
+        const pt = GRAPH_COORDS[v];
+        const isCurr = gs.current === v;
+        const isVis = gs.visited.includes(v);
+        const fill = isCurr ? '#0c4a6e' : (isVis ? '#064e3b' : '#121215');
+        const stroke = isCurr ? '#38bdf8' : (isVis ? '#10b981' : '#52525b');
+
+        svg += `
+          <g transform="translate(${pt.x}, ${pt.y})">
+            <circle r="20" fill="${fill}" stroke="${stroke}" stroke-width="1.75" />
+            <text dy="4" fill="#fafafa" font-size="12" font-weight="600" text-anchor="middle">${v}</text>
+            <text dy="32" fill="#71717a" font-size="9" text-anchor="middle">${toHexAddr(pt.ram)}</text>
+          </g>
+        `;
+      });
+
+      svg += `</svg>`;
+      stage.innerHTML = svg;
+    }
+
+    // -------------------------------------------------------------------------
+    // RIGHT COLUMN: CACHE & RAM INSPECTOR RENDERER
+    // -------------------------------------------------------------------------
+    function renderHardwareInspector(f) {
+      const badge = document.getElementById('hw-event-badge');
+      if (f.hwEvent === 'ERROR') {
+        badge.className = "text-[10px] font-mono font-bold px-2 py-0.5 rounded-xs bg-red-500/20 text-red-300 border border-red-500/50";
+        badge.innerText = "ERROR STATE";
+      } else if (f.hwEvent === 'CACHE HIT') {
+        badge.className = "text-[10px] font-mono font-semibold px-2 py-0.5 rounded-xs bg-emerald-500/15 text-emerald-400 border border-emerald-500/40 flash-hit";
+        badge.innerText = "CACHE HIT";
+      } else if (f.hwEvent === 'CACHE MISS') {
+        badge.className = "text-[10px] font-mono font-semibold px-2 py-0.5 rounded-xs bg-amber-500/15 text-amber-400 border border-amber-500/40 flash-miss";
+        badge.innerText = "CACHE MISS (RAM LOAD)";
+      } else {
+        badge.className = "text-[10px] font-mono font-semibold px-2 py-0.5 rounded-xs bg-carbon-800 text-zinc-400 border border-carbon-700";
+        badge.innerText = "IDLE";
+      }
+
+      // 1. 8-Slot Cache Strip
+      const cacheStrip = document.getElementById('l1-cache-strip');
+      const startHex = toHexAddr(f.l1CacheLineStart);
+      const endHex = toHexAddr(f.l1CacheLineStart + 7);
+      document.getElementById('cache-line-label').innerText = `Active Block: ${startHex} – ${endHex}`;
+      cacheStrip.innerHTML = '';
+
+      for (let i = 0; i < 8; i++) {
+        const slotIdx = f.l1CacheLineStart + i;
+        const slotObj = f.ramSlots[slotIdx];
+        const cell = document.createElement('div');
+        cell.className = `p-1.5 rounded-xs border text-center font-mono transition-all ${
+          slotObj?.active
+            ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400 font-bold'
+            : 'bg-carbon-950 text-zinc-300 border-carbon-700'
+        }`;
+        cell.innerHTML = `
+          <div class="text-[8px] text-zinc-500">${toHexAddr(slotIdx)}</div>
+          <div class="text-[11px] font-semibold truncate mt-0.5">${slotObj?.val !== null && slotObj?.val !== undefined ? slotObj.val : '—'}</div>
+        `;
+        cacheStrip.appendChild(cell);
+      }
+
+      // 2. Physical RAM 32-Slot Matrix
+      const isContiguous = ['array', 'stack', 'queue'].includes(f.ds) || (f.ds === 'tree' && treeType === 'heap');
+      const modeTag = document.getElementById('ram-mode-tag');
+      modeTag.innerText = isContiguous ? 'Contiguous Memory' : 'Scattered Nodes';
+      modeTag.className = `text-[10px] font-mono px-2 py-0.5 rounded-xs border ${
+        isContiguous ? 'bg-sky-500/10 text-sky-400 border-sky-500/30' : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+      }`;
+
+      const grid = document.getElementById('ram-grid');
+      grid.innerHTML = '';
+      f.ramSlots.forEach(s => {
+        const inCache = s.slot >= f.l1CacheLineStart && s.slot < f.l1CacheLineStart + 8;
+        let style = "bg-carbon-950 border-carbon-800 text-zinc-600";
+        if (s.kind === 'contiguous') style = "bg-sky-950/40 border-sky-500/40 text-sky-200";
+        if (s.kind === 'pointer') style = "bg-amber-950/30 border-amber-500/40 text-amber-200";
+        if (s.active) style = "bg-zinc-100 text-carbon-950 font-bold border-white z-10";
+
+        const cell = document.createElement('div');
+        cell.className = `h-11 rounded-xs border flex flex-col items-center justify-between p-1 font-mono transition-all ${style} ${
+          inCache && !s.active ? 'ring-1 ring-inset ring-emerald-500/40' : ''
+        }`;
+        cell.innerHTML = `
+          <span class="text-[8px] ${s.active ? 'text-carbon-900' : 'text-zinc-500'}">${s.hex}</span>
+          <span class="text-[11px] font-semibold truncate">${s.val !== null ? s.val : '·'}</span>
+        `;
+        grid.appendChild(cell);
+      });
+
+      // 3. Top Header Stats
+      const total = f.hwStats.hits + f.hwStats.misses;
+      const rate = total === 0 ? 100 : Math.round((f.hwStats.hits / total) * 100);
+      document.getElementById('score-hits').innerText = f.hwStats.hits;
+      document.getElementById('score-misses').innerText = f.hwStats.misses;
+      document.getElementById('score-rate').innerText = `${rate}%`;
+      const cyclesEl = document.getElementById('score-cycles');
+      if (cyclesEl) cyclesEl.innerText = f.hwStats.totalCycles;
+
+      // 4. Operation Log
+      const logEl = document.getElementById('hw-trace-log');
+      document.getElementById('trace-count').innerText = `${f.traceSnapshot.length} Events`;
+      if (f.traceSnapshot.length === 0) {
+        logEl.innerHTML = `<div class="text-zinc-600">No operations recorded yet.</div>`;
+      } else {
+        logEl.innerHTML = f.traceSnapshot.map(t => {
+          const badgeStyle = t.type === 'ERROR'
+            ? 'bg-red-500 text-carbon-950'
+            : (t.type === 'HIT' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400');
+          const textStyle = t.type === 'ERROR' ? 'text-red-300 font-semibold' : 'text-zinc-300';
+          return `
+            <div class="flex items-center gap-2 py-0.5 border-b border-carbon-800/60">
+              <span class="px-1 rounded-xs text-[9px] font-bold ${badgeStyle}">${t.type}</span>
+              <span class="truncate ${textStyle}">${t.text}</span>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+  </script>
+</body>
+</html>
